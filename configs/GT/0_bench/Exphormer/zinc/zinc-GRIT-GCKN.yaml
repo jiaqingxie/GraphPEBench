@@ -25,6 +25,12 @@ dataset:
   edge_encoder_name: TypeDictEdge
   edge_encoder_num_types: 4
   edge_encoder_bn: False
+prep:
+  exp: False
+  exp_deg: 3
+  use_exp_edges: False
+  add_edge_index: True # Set True if you want to add real edges beside expander edges
+  num_virt_node: 6 # Set True if you want to add global node connections beside expander edges
 posenc_GCKN:
   enable: True
   normalization: None
@@ -48,29 +54,18 @@ train:
   ckpt_best: True  # WARNING: Checkpoint every epoch a better model is found may increase I/O significantly.
   ckpt_clean: True # Delete old ckpt each time.
 model:
-  type: GritTransformer
+  type: MultiModel
   loss_fun: l1
-  edge_decoding: dot
-  graph_pooling: add
+  graph_pooling: mean
 gt:
-  layer_type: GritTransformer
-  layers: 10
-  n_heads: 8
+  layer_type: CustomGatedGCN+Exphormer
+  layers: 7
+  n_heads: 4
   dim_hidden: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
   dropout: 0.0
+  attn_dropout: 0.5
   layer_norm: False
   batch_norm: True
-#  bn_momentum: 0.01
-  update_e: True
-  attn_dropout: 0.2
-  attn:
-    clamp: 5.
-    act: 'relu'
-    full_attn: True
-    edge_enhance: True
-    O_e: True
-    norm_e: True
-    fwl: False
 gnn: # decoder --> san_graph = MLP + pooling
   head: san_graph
   layers_pre_mp: 0

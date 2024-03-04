@@ -25,6 +25,12 @@ dataset:
   edge_encoder_name: TypeDictEdge
   edge_encoder_num_types: 4
   edge_encoder_bn: False
+prep:
+  exp: False
+  exp_deg: 3
+  use_exp_edges: False
+  add_edge_index: True # Set True if you want to add real edges beside expander edges
+  num_virt_node: 6 # Set True if you want to add global node connections beside expander edges
 posenc_RWDIFF:
   enable: True
   model: DeepSet
