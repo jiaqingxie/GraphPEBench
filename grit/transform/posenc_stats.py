@@ -20,7 +20,9 @@ from torch_ppr import page_rank, personalized_page_rank
 from node2vec import Node2Vec
 import networkx as nx
 from torch_geometric.utils import to_networkx
-from ..utils import wl_positional_encoding
+from torch_geometric.utils import to_undirected, remove_self_loops, add_self_loops
+
+from ..utils import wl_positional_encoding, adj_mul
 
 class DisableLogging:
     def __enter__(self):
@@ -73,6 +75,9 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
         Extended PyG Data object.
     """
     # Verify PE types.
+
+
+
     for t in pe_types:
         if t not in ['LapPE', 'EquivStableLapPE', 'SignNet',
                      'RWSE', 'HKdiagSE', 'HKfullPE', 'ElstaticSE','RRWP',

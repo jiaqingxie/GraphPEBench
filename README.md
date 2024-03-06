@@ -45,7 +45,20 @@ python main.py --cfg configs/GT/0_bench/GRIT/zinc/zinc-GRIT-RWDIFF.yaml  wandb.u
 # replace 'configs/GRIT/zinc-GRIT.yaml' with any experiments to run
 ```
 
-### Implemented Existing Positional Encoding (before April 2024)
+### Implemented Graph Transformers with Sparse Attention
+- Exphormer (included) `grit/network/multi_model.py`
+- GraphGPS (included) `grit/network/gps_model.py`
+- NodeFormer (included) `grit/network/nodeformer_model.py`
+- DIFFORMER (to be included)
+- GOAT (code is not available)
+- NAGphormer (to be included)
+- GraphMLPMixer (to be included)
+
+### Implemented Graph Transformers with Global Attention
+- GRIT (Already in GRIT) `grit/network/grit_model.py`
+- 
+
+### Implemented Existing Positional Encoding in Graph Transformers (before April 2024)
 
 - ESLapPE (Already in GPS/GRIT) `grit/encoder/equivstable_laplace_pos_encoder.py`
 - LapPE (Already in GPS/GRIT) `grit/encoder/laplace_pos_encoder.py`

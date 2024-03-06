@@ -106,6 +106,12 @@ def cfg_to_dict(cfg_node, key_list=[]):
             cfg_dict[k] = cfg_to_dict(v, key_list + [k])
         return cfg_dict
 
+def adj_mul(adj_i, adj, N):
+    adj_i_sp = torch.sparse_coo_tensor(adj_i, torch.ones(adj_i.shape[1], dtype=torch.float).to(adj.device), (N, N))
+    adj_sp = torch.sparse_coo_tensor(adj, torch.ones(adj.shape[1], dtype=torch.float).to(adj.device), (N, N))
+    adj_j = torch.sparse.mm(adj_i_sp, adj_sp)
+    adj_j = adj_j.coalesce().indices()
+    return adj_j
 
 def make_wandb_name(cfg):
     # Format dataset name.

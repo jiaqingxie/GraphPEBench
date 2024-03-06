@@ -36,9 +36,13 @@ class SANGraphHead(nn.Module):
         #   potentially due to the change of PyG/GraphGym version
 
     def _apply_index(self, batch):
+        if type(batch) == tuple:
+            batch = batch[0]
         return batch.graph_feature, batch.y
 
     def forward(self, batch):
+        if type(batch) == tuple:
+            batch = batch[0]
         graph_emb = self.pooling_fun(batch.x, batch.batch)
         for l in range(self.L):
             graph_emb = self.FC_layers[l](graph_emb)
