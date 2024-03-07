@@ -76,7 +76,7 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
     """
     # Verify PE types.
 
-
+    # cfg.num_nodes = data.num_nodes
 
     for t in pe_types:
         if t not in ['LapPE', 'EquivStableLapPE', 'SignNet',

@@ -46,17 +46,27 @@ python main.py --cfg configs/GT/0_bench/GRIT/zinc/zinc-GRIT-RWDIFF.yaml  wandb.u
 ```
 
 ### Implemented Graph Transformers with Sparse Attention
-- Exphormer (included) `grit/network/multi_model.py`
-- GraphGPS (included) `grit/network/gps_model.py`
-- NodeFormer (included) `grit/network/nodeformer_model.py`
-- DIFFORMER (to be included)
-- GOAT (code is not available)
-- NAGphormer (to be included)
+- Exphormer (included) `grit/layer/Exphormer.py`
+- GraphGPS (included) `grit/layer/gps_layer.py`
+- NodeFormer (included) `grit/layer/nodeformer_layer.py`
+- DIFFORMER (to be included) `grit/layer/difformer_layer.py`
+- GOAT (to be included for node-level)
+- NAGphormer (to be included for node-level)
 - GraphMLPMixer (to be included)
 
 ### Implemented Graph Transformers with Global Attention
-- GRIT (Already in GRIT) `grit/network/grit_model.py`
-- 
+- GRIT (included) `grit/layer/grit_layer.py`
+- Graphormer (included) `grit/layer/graphormer_layer.py`
+- EGT (included) `grit/layer/egt_layer.py`
+- SAN (included) `grit/layer/san_layer.py`
+- GraphTrans (to be included)
+- GraphiT (to be included)
+- Original_GT (to be included)
+- Specformer (to be included)
+- SAT (to be included)
+- GRPE (to be included)
+- GPS++ (for molecules so I won't included)
+
 
 ### Implemented Existing Positional Encoding in Graph Transformers (before April 2024)
 
@@ -71,7 +81,8 @@ python main.py --cfg configs/GT/0_bench/GRIT/zinc/zinc-GRIT-RWDIFF.yaml  wandb.u
 - Node2Vec Algorithm (NODE2VEC) `grit/encoder/node2vec_pos_encoder.py`
 - WL test based PE (WLPE) `grit/encoder/wlpe_pos_encoder.py`
 - Diffusion on Kernelized Laplacian PE (GCKN) `grit/encoder/gckn_pos_encoder.py`
-- Diffusion on Random Walk Probabilities (LSPE) ``grit/encoder/rwdiff_pos_encoder.py``
+- Diffusion on Random Walk Probabilities (LSPE) `grit/encoder/rwdiff_pos_encoder.py`
+- CORE Graph Rewiring and Drawing (CORE) (to be included)
 
 ### Configurations and Scripts
 
