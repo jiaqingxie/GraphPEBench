@@ -52,14 +52,13 @@ python main.py --cfg configs/GT/0_bench/GRIT/zinc/zinc-GRIT-RWDIFF.yaml  wandb.u
 - DIFFORMER (to be included) `grit/layer/difformer_layer.py`
 - GOAT (to be included for node-level)
 - NAGphormer (to be included for node-level)
-- GraphMLPMixer (to be included)
 
 ### Implemented Graph Transformers with Global Attention
 - GRIT (included) `grit/layer/grit_layer.py`
 - Graphormer (included) `grit/layer/graphormer_layer.py`
 - EGT (included) `grit/layer/egt_layer.py`
 - SAN (included) `grit/layer/san_layer.py`
-- GraphTrans (to be included)
+- GraphTrans (included) `grit/layer/graphtrans_layer.py`
 - GraphiT (to be included)
 - Original_GT (to be included)
 - Specformer (to be included)
