@@ -1,0 +1,12 @@
+{"epoch": 0, "time_epoch": 4.91914, "loss": 0.64575344, "lr": 0, "params": 384193, "time_iter": 0.15372, "mae": 0.64575, "r2": 0.68162, "spearmanr": 0.88687, "mse": 1.29526, "rmse": 1.13809}
+{"epoch": 1, "time_epoch": 4.81346, "loss": 0.57268845, "lr": 0, "params": 384193, "time_iter": 0.15042, "mae": 0.57269, "r2": 0.68599, "spearmanr": 0.90639, "mse": 1.27749, "rmse": 1.13026}
+{"epoch": 2, "time_epoch": 4.74335, "loss": 0.49973987, "lr": 0, "params": 384193, "time_iter": 0.14823, "mae": 0.49974, "r2": 0.72598, "spearmanr": 0.91853, "mse": 1.11479, "rmse": 1.05584}
+{"epoch": 3, "time_epoch": 4.74656, "loss": 0.54726059, "lr": 0, "params": 384193, "time_iter": 0.14833, "mae": 0.54726, "r2": 0.75546, "spearmanr": 0.92054, "mse": 0.99486, "rmse": 0.99743}
+{"epoch": 4, "time_epoch": 4.73209, "loss": 0.83156462, "lr": 0, "params": 384193, "time_iter": 0.14788, "mae": 0.83156, "r2": 0.55975, "spearmanr": 0.90991, "mse": 1.79107, "rmse": 1.33831}
+{"epoch": 5, "time_epoch": 4.72996, "loss": 0.4920895, "lr": 0, "params": 384193, "time_iter": 0.14781, "mae": 0.49209, "r2": 0.71497, "spearmanr": 0.91665, "mse": 1.15958, "rmse": 1.07684}
+{"epoch": 6, "time_epoch": 4.7366, "loss": 0.46545481, "lr": 0, "params": 384193, "time_iter": 0.14802, "mae": 0.46545, "r2": 0.73907, "spearmanr": 0.9261, "mse": 1.06153, "rmse": 1.03031}
+{"epoch": 7, "time_epoch": 4.73591, "loss": 0.60773988, "lr": 0, "params": 384193, "time_iter": 0.148, "mae": 0.60774, "r2": 0.75779, "spearmanr": 0.92462, "mse": 0.98539, "rmse": 0.99267}
+{"epoch": 8, "time_epoch": 4.78436, "loss": 0.46532485, "lr": 0, "params": 384193, "time_iter": 0.14951, "mae": 0.46532, "r2": 0.7535, "spearmanr": 0.92962, "mse": 1.00283, "rmse": 1.00141}
+{"epoch": 9, "time_epoch": 4.73119, "loss": 0.49704352, "lr": 0, "params": 384193, "time_iter": 0.14785, "mae": 0.49704, "r2": 0.77622, "spearmanr": 0.93371, "mse": 0.91039, "rmse": 0.95414}
+{"epoch": 10, "time_epoch": 4.73485, "loss": 0.46278742, "lr": 0, "params": 384193, "time_iter": 0.14796, "mae": 0.46279, "r2": 0.76619, "spearmanr": 0.93204, "mse": 0.9512, "rmse": 0.97529}
+{"epoch": 11, "time_epoch": 4.67464, "loss": 0.51204593, "lr": 0, "params": 384193, "time_iter": 0.14608, "mae": 0.51205, "r2": 0.76631, "spearmanr": 0.93465, "mse": 0.95072, "rmse": 0.97505}

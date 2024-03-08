@@ -1,0 +1,12 @@
+[*] Run ID 0: seed=0, split_index=0
+    Starting now: 2024-03-07 09:09:31.433690
+[*] Loaded dataset 'PATTERN' from 'PyG-GNNBenchmarkDataset':
+  Data(x=[1664491, 3], edge_index=[2, 85099952], y=[1664491])
+  undirected: True
+  num graphs: 14000
+  avg num_nodes/graph: 118
+  num node features: 3
+  num edge features: 0
+  num classes: 2
+Precomputing Positional Encoding statistics: ['RRWP'] for all graphs...
+  ...estimated to be undirected: True

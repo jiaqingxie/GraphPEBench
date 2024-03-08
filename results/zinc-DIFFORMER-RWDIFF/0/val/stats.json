@@ -1,0 +1,2 @@
+{"epoch": 0, "time_epoch": 0.98742, "loss": 1.41022989, "lr": 0, "params": 629337, "time_iter": 0.03086, "mae": 1.41023, "r2": -0.02329, "spearmanr": 0.26032, "mse": 4.03048, "rmse": 2.00761}
+{"epoch": 1, "time_epoch": 0.90491, "loss": 2.04807287, "lr": 0, "params": 629337, "time_iter": 0.02828, "mae": 2.04807, "r2": -0.91533, "spearmanr": 0.28603, "mse": 7.544, "rmse": 2.74663}

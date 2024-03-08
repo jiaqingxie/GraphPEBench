@@ -59,8 +59,8 @@ python main.py --cfg configs/GT/0_bench/GRIT/zinc/zinc-GRIT-RWDIFF.yaml  wandb.u
 - EGT (included) `grit/layer/egt_layer.py`
 - SAN (included) `grit/layer/san_layer.py`
 - GraphTrans (included) `grit/layer/graphtrans_layer.py`
-- GraphiT (to be included)
-- Original_GT (to be included)
+- GraphiT (to be included) `grit/layer/graphit_layer.py`
+- Original_GT (to be included) `grit/layer/origin_gt_layer.py`
 - Specformer (to be included)
 - SAT (to be included)
 - GRPE (to be included)

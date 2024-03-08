@@ -92,8 +92,9 @@ class GraphTransformer(torch.nn.Module):
         layers = []
         for l in range(cfg.gt.layers):
             layers.append(TransformerLayer(
-                in_dim=cfg.gt.dim_hidden,
-                out_dim=cfg.gt.dim_hidden,
+                node_in_dim=cfg.gt.dim_hidden,
+                hidden_dim=cfg.gt.dim_hidden,
+                edge_in_dim=cfg.gt.dim_hidden,
                 num_heads=cfg.gt.n_heads,
             ))
         # layers = []
