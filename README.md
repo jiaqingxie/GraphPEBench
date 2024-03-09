@@ -61,10 +61,11 @@ python main.py --cfg configs/GT/0_bench/GRIT/zinc/zinc-GRIT-RWDIFF.yaml  wandb.u
 - GraphTrans (included) `grit/layer/graphtrans_layer.py`
 - GraphiT (to be included) `grit/layer/graphit_layer.py`
 - Original_GT (to be included) `grit/layer/origin_gt_layer.py`
-- Specformer (to be included)
+- Specformer (for molecules so not included) ===> inside structure is just vanilla transformer
+- UniMP (to be included) 
 - SAT (to be included)
 - GRPE (to be included)
-- GPS++ (for molecules so I won't included)
+- GPS++ (for molecules so I not included)
 
 
 ### Implemented Existing Positional Encoding in Graph Transformers (before April 2024)
@@ -85,19 +86,9 @@ python main.py --cfg configs/GT/0_bench/GRIT/zinc/zinc-GRIT-RWDIFF.yaml  wandb.u
 
 ### Configurations and Scripts
 
-- Configurations are available under `./configs/GRIT/xxxxx.yaml`
+- Configurations are available under `PEGT/configs/GT/0_bench/xx/dataset/dataset-xx-yy.yaml` where
+dataset is the name of the dataset, xx is the attention module and yy is your positional encoding
 - Scripts to execute are available under `./scripts/xxx.sh`
-  - will run 4 trials of experiments parallelly on `GPU:0,1,2,3`.
+  - will run 4 trials of experiments parallelly on `GPU:0,1,2,3`. (To be updated)
 
 
-## Citation
-If you find this work useful, please consider citing:
-
-```
-@inproceedings{ma2023GraphInductiveBiases,
-	title = {Graph {Inductive} {Biases} in {Transformers} without {Message} {Passing}},
-	booktitle = {Proc. {Int}. {Conf}. {Mach}. {Learn}.},
-	author = {Ma, Liheng and Lin, Chen and Lim, Derek and Romero-Soriano, Adriana and K. Dokania and Coates, Mark and H.S. Torr, Philip and Lim, Ser-Nam},
-	year = {2023},
-}
-```
