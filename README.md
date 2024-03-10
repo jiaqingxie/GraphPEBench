@@ -62,7 +62,7 @@ python main.py --cfg configs/GT/0_bench/GRIT/zinc/zinc-GRIT-RWDIFF.yaml  wandb.u
 - GraphiT (to be included) `grit/layer/graphit_layer.py`
 - Original_GT (to be included) `grit/layer/origin_gt_layer.py`
 - Specformer (for molecules so not included) ===> inside structure is just vanilla transformer
-- UniMP (to be included) 
+- UniMP (included) `grit/layer/unimp.py`
 - SAT (to be included)
 - GRPE (to be included)
 - GPS++ (for molecules so I not included)

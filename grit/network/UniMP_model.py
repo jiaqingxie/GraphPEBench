@@ -44,16 +44,17 @@ class FeatureEncoder(torch.nn.Module):
                 self.edge_encoder_bn = BatchNorm1dNode(
                     new_layer_config(cfg.gnn.dim_edge, -1, -1, has_act=False,
                                      has_bias=False, cfg=cfg))
+
     def forward(self, batch):
         for module in self.children():
             batch = module(batch)
         return batch
 
 
-@register_network('NAGphormer')
-class NAGphormer(torch.nn.Module):
+@register_network('UniMP')
+class UniMP(torch.nn.Module):
     '''
-        NodeFormer
+        UniMP: pyg.conv.TransformerConv
     '''
 
     def __init__(self, dim_in, dim_out):
@@ -64,16 +65,7 @@ class NAGphormer(torch.nn.Module):
         self.ablation = True
         self.ablation = False
 
-        # if cfg.posenc_RRWP.enable:
-        #     self.rrwp_abs_encoder = register.node_encoder_dict["rrwp_linear"]\
-        #         (cfg.posenc_RRWP.ksteps, cfg.gnn.dim_inner)
-        #     rel_pe_dim = cfg.posenc_RRWP.ksteps
-        #     self.rrwp_rel_encoder = register.edge_encoder_dict["rrwp_linear"] \
-        #         (rel_pe_dim, cfg.gnn.dim_edge,
-        #          pad_to_full_graph=cfg.gt.attn.full_attn,
-        #          add_node_attr_as_self_loop=False,
-        #          fill_value=0.
-        #          )
+
 
 
         if cfg.gnn.layers_pre_mp > 0:
@@ -84,7 +76,7 @@ class NAGphormer(torch.nn.Module):
         assert cfg.gt.dim_hidden == cfg.gnn.dim_inner == dim_in, \
             "The inner and hidden dims must match."
 
-        global_model_type = cfg.gt.get('layer_type', "NAGphormer")
+        global_model_type = cfg.gt.get('layer_type', "UniMP")
         # global_model_type = "GritTransformer"
 
         TransformerLayer = register.layer_dict.get(global_model_type)
@@ -92,16 +84,12 @@ class NAGphormer(torch.nn.Module):
         layers = []
         for l in range(cfg.gt.layers):
             layers.append(TransformerLayer(
-                hops = cfg.gt.hops,
-                n_class=cfg.gt.n_class,
-                input_dim=cfg.gt.dim_hidden,
-                pe_dim=cfg.gt.pe_dim,
-                n_layers = cfg.gt.num_layers,
-                num_heads = cfg.gt.n_heads,
-                hidden_dim = cfg.gt.dim_hidden,
-                ffn_dim = cfg.gt.dim_hidden,
-                dropout_rate = cfg.gt.dropout,
-                attention_dropout_rate = cfg.gt.attention_dropout_rate
+                in_dim=cfg.gt.dim_hidden,
+                out_dim=cfg.gt.dim_hidden,
+                concat=cfg.gt.concat,
+                num_heads=cfg.gt.n_heads,
+                dropout=cfg.gt.dropout,
+                beta=cfg.gt.beta
             ))
         # layers = []
 
@@ -114,7 +102,3 @@ class NAGphormer(torch.nn.Module):
             batch = module(batch)
 
         return batch
-
-
-
-

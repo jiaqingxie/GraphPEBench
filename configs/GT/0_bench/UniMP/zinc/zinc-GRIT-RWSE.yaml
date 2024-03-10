@@ -18,20 +18,20 @@ dataset:
   task_type: regression
   transductive: False
   node_encoder: True
-  node_encoder_name: TypeDictNode+RWDIFF
+  node_encoder_name: TypeDictNode+RWSE
   node_encoder_num_types: 21 # actually 21 in Zinc-12k, 28 in Zinc-full
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: TypeDictEdge
   edge_encoder_num_types: 4
   edge_encoder_bn: False
-posenc_RWDIFF:
+posenc_RWSE:
   enable: True
-  model: DeepSet
-  dim_pe: 4 #( dim_pe + 60 = gt.dim_hidden (in below ) )
-  layers: 2
-  n_heads: 4  # Only used when `posenc.model: Transformer`
-  raw_norm_type: none
+  kernel:
+    times_func: range(1,21)
+  model: Linear
+  dim_pe: 28
+  raw_norm_type: BatchNorm
 train:
   mode: custom
   batch_size: 32
@@ -40,20 +40,29 @@ train:
   ckpt_best: True  # WARNING: Checkpoint every epoch a better model is found may increase I/O significantly.
   ckpt_clean: True # Delete old ckpt each time.
 model:
-  type: NAGphormer
+  type: GritTransformer
   loss_fun: l1
   edge_decoding: dot
   graph_pooling: add
 gt:
-  layer_type: NAGphormer
-  hops: 100
-  n_class: 1
-  dim_hidden: 64
-  pe_dim: 4
-  num_heads: 4
+  layer_type: GritTransformer
+  layers: 10
+  n_heads: 8
+  dim_hidden: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
   dropout: 0.0
-  num_layers: 1
-  attention_dropout_rate: 0.1
+  layer_norm: False
+  batch_norm: True
+#  bn_momentum: 0.01
+  update_e: True
+  attn_dropout: 0.2
+  attn:
+    clamp: 5.
+    act: 'relu'
+    full_attn: True
+    edge_enhance: True
+    O_e: True
+    norm_e: True
+    fwl: False
 gnn: # decoder --> san_graph = MLP + pooling
   head: san_graph
   layers_pre_mp: 0

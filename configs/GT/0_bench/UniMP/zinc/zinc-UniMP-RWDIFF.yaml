@@ -40,20 +40,18 @@ train:
   ckpt_best: True  # WARNING: Checkpoint every epoch a better model is found may increase I/O significantly.
   ckpt_clean: True # Delete old ckpt each time.
 model:
-  type: NAGphormer
+  type: UniMP
   loss_fun: l1
   edge_decoding: dot
   graph_pooling: add
 gt:
-  layer_type: NAGphormer
-  hops: 100
-  n_class: 1
+  layer_type: UniMP
   dim_hidden: 64
-  pe_dim: 4
-  num_heads: 4
-  dropout: 0.0
-  num_layers: 1
-  attention_dropout_rate: 0.1
+  concat: False
+  beta: True
+  n_heads: 1
+  dropout: 0.6
+  layers: 2
 gnn: # decoder --> san_graph = MLP + pooling
   head: san_graph
   layers_pre_mp: 0

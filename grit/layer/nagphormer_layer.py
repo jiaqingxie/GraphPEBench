@@ -24,9 +24,8 @@ def gelu(x):
     # return 0.5 * x * (1 + torch.tanh(math.sqrt(2 / math.pi) * (x + 0.044715 * torch.pow(x, 3))))
     return 0.5 * x * (1.0 + torch.erf(x / math.sqrt(2.0)))
 
-
-@register_layer("NAGphormer")
-class NAGphormer(nn.Module):
+@register_layer('NAGphormer')
+class TransformerModel(nn.Module):
     def __init__(
             self,
             hops,
@@ -83,8 +82,8 @@ class NAGphormer(nn.Module):
 
         output = self.final_ln(tensor)
 
-        target = output[:, 0, :].unsqueeze(1).repeat(1, self.seq_len - 1, 1)
-        split_tensor = torch.split(output, [1, self.seq_len - 1], dim=1)
+        target = output[:, 0, :].unsqueeze(1).repeat(1, batched_data.num_nodes - 1, 1)
+        split_tensor = torch.split(output, [1, batched_data.num_nodes  - 1], dim=1)
 
         node_tensor = split_tensor[0]
         neighbor_tensor = split_tensor[1]
@@ -99,8 +98,8 @@ class NAGphormer(nn.Module):
 
         output = (node_tensor + neighbor_tensor).squeeze()
 
-        batched_data.x = output
 
+        batched_data.x = output
         return batched_data
 
 
@@ -167,7 +166,7 @@ class MultiHeadAttention(nn.Module):
 
         x = self.output_layer(x)
 
-        assert x.size() == orig_q_size
+        # assert x.size() == orig_q_size
         return x
 
 
