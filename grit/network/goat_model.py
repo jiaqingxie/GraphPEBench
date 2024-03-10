@@ -84,7 +84,7 @@ class GOAT(torch.nn.Module):
         assert cfg.gt.dim_hidden == cfg.gnn.dim_inner == dim_in, \
             "The inner and hidden dims must match."
 
-        global_model_type = cfg.gt.get('layer_type', "DIFFormer")
+        global_model_type = cfg.gt.get('layer_type', "GOAT")
         # global_model_type = "GritTransformer"
 
         TransformerLayer = register.layer_dict.get(global_model_type)
@@ -94,15 +94,14 @@ class GOAT(torch.nn.Module):
             layers.append(TransformerLayer(
                 in_channels=cfg.gt.dim_hidden,
                 out_channels=cfg.gt.dim_hidden,
-                global_dim=cfg.gt.global_dim,
-                num_nodes=cfg.gt.num_nodes,
                 spatial_size=cfg.gt.spatial_size,
+                global_dim=cfg.gt.dim_hidden,
+                num_centroids=cfg.gt.num_centroids,
                 heads=cfg.gt.num_heads,
                 dropout=cfg.gt.attn_dropout,
                 skip=cfg.gt.skip,
                 dist_count_norm=cfg.gt.dist_count_norm,
                 conv_type=cfg.gt.conv_type,
-                num_centroids=cfg.gt.num_centroids
             ))
         # layers = []
 

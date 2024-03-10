@@ -46,16 +46,15 @@ model:
   graph_pooling: add
 gt:
   layer_type: GOAT
+  layers: 4
   dim_hidden: 64
-  num_nodes: none
-  num_heads: 1
-  global_dim: 64
-  spatial_size: 5
+  num_heads: 2
+  num_centroids: 64
+  spatial_size: 64
   dropout: 0.0
-  skip: 0
-  dist_count_norm: 1
-  conv_type: 'local'
-  num_centroids: 4096
+  skip: True
+  dist_count_norm: True
+  conv_type: 'global'
 gnn: # decoder --> san_graph = MLP + pooling
   head: san_graph
   layers_pre_mp: 0

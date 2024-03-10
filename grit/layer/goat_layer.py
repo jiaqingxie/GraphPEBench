@@ -2,95 +2,33 @@ from genericpath import exists
 import math
 from typing import Optional, Tuple, Union
 
-
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from deepsnap import batch
 from torch import Tensor
-
+from torch_sparse import SparseTensor
 
 from torch_geometric.nn.conv import MessagePassing
 from torch_geometric.nn.dense.linear import Linear
 from torch_geometric.typing import Adj, OptTensor, PairTensor
 from torch_geometric.utils import softmax
 
+from .GOAT.vq import VectorQuantizerEMA
 from einops import rearrange, repeat, reduce
-
-import torch
-from torch import nn
-import torch.nn.functional as F
-
+from einops.layers.torch import Rearrange
 from torch_geometric.graphgym.register import *
-class VectorQuantizerEMA(nn.Module):
-    def __init__(
-            self,
-            num_embeddings,
-            embedding_dim,
-            decay=0.99
-    ):
-        super(VectorQuantizerEMA, self).__init__()
 
-        self._embedding_dim = embedding_dim
-        self._num_embeddings = num_embeddings
-
-        self.register_buffer('_embedding', torch.randn(self._num_embeddings, self._embedding_dim * 2))
-        self.register_buffer('_embedding_output', torch.randn(self._num_embeddings, self._embedding_dim * 2))
-        self.register_buffer('_ema_cluster_size', torch.zeros(num_embeddings))
-        self.register_buffer('_ema_w', torch.randn(self._num_embeddings, self._embedding_dim * 2))
-
-        self._decay = decay
-        self.bn = torch.nn.BatchNorm1d(self._embedding_dim * 2, affine=False)
-
-    def get_k(self):
-        return self._embedding_output
-
-    def get_v(self):
-        return self._embedding_output[:, :self._embedding_dim]
-
-    def update(self, x):
-        inputs_normalized = self.bn(x)
-        embedding_normalized = self._embedding
-
-        # Calculate distances
-        distances = (torch.sum(inputs_normalized ** 2, dim=1, keepdim=True)
-                     + torch.sum(embedding_normalized ** 2, dim=1)
-                     - 2 * torch.matmul(inputs_normalized, embedding_normalized.t()))
-
-        # Encoding
-        encoding_indices = torch.argmin(distances, dim=1).unsqueeze(1)
-        encodings = torch.zeros(encoding_indices.shape[0], self._num_embeddings, device=x.device)
-        encodings.scatter_(1, encoding_indices, 1)
-
-        # Use EMA to update the embedding vectors
-        if self.training:
-            self._ema_cluster_size.data = self._ema_cluster_size * self._decay + (1 - self._decay) * torch.sum(
-                encodings, 0)
-
-            # Laplace smoothing of the cluster size
-            n = torch.sum(self._ema_cluster_size.data)
-            self._ema_cluster_size.data = (self._ema_cluster_size + 1e-5) / (n + self._num_embeddings * 1e-5) * n
-
-            # if torch.count_nonzero(self._ema_cluster_size) != self._ema_cluster_size.shape[0] :
-            #     raise ValueError('Bad Init!')
-
-            dw = torch.matmul(encodings.t(), inputs_normalized)
-            self._ema_w.data = self._ema_w * self._decay + (1 - self._decay) * dw
-            self._embedding.data = self._ema_w / self._ema_cluster_size.unsqueeze(1)
-
-            running_std = torch.sqrt(self.bn.running_var + 1e-5).unsqueeze(dim=0)
-            running_mean = self.bn.running_mean.unsqueeze(dim=0)
-            self._embedding_output.data = self._embedding * running_std + running_mean
-
-        return encoding_indices
-
-@register_layer("GOAT")
-class GOAT(MessagePassing):
+@register_layer('GOAT')
+class TransformerConv(MessagePassing):
     _alpha: OptTensor
 
     def __init__(
             self,
             in_channels: int,
             out_channels: int,
-            global_dim: int,
-            num_nodes: int,
             spatial_size: int,
+            global_dim: int,
             heads: int = 1,
             concat: bool = True,
             beta: bool = False,
@@ -105,7 +43,7 @@ class GOAT(MessagePassing):
             **kwargs,
     ):
         kwargs.setdefault('aggr', 'add')
-        super(GOAT, self).__init__(node_dim=0, **kwargs)
+        super(TransformerConv, self).__init__(node_dim=0, **kwargs)
 
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -143,24 +81,26 @@ class GOAT(MessagePassing):
             else:
                 self.lin_beta = self.register_parameter('lin_beta', None)
 
-        spatial_add_pad = 1
 
-        self.spatial_encoder = torch.nn.Embedding(spatial_size + spatial_add_pad, heads)
 
-        if self.conv_type != 'local':
+        self.spatial_encoder = torch.nn.Embedding(spatial_size, heads)
+
+        if self.conv_type != 'local' :
             self.vq = VectorQuantizerEMA(
                 num_centroids,
                 global_dim,
                 decay=0.99
             )
-            c = torch.randint(0, num_centroids, (num_nodes,), dtype=torch.short)
-            self.register_buffer('c_idx', c)
+
             self.attn_fn = F.softmax
 
             self.lin_proj_g = Linear(in_channels, global_dim)
-            self.lin_key_g = Linear(global_dim * 2, heads * out_channels)
-            self.lin_query_g = Linear(global_dim * 2, heads * out_channels)
+            self.pre_trans = Linear(in_channels, global_dim*2)
+            self.lin_key_g = Linear(global_dim*2, heads * out_channels)
+            self.lin_query_g = Linear(global_dim*2, heads * out_channels)
             self.lin_value_g = Linear(global_dim, heads * out_channels)
+
+
 
         self.reset_parameters()
 
@@ -176,20 +116,21 @@ class GOAT(MessagePassing):
 
         torch.nn.init.zeros_(self.spatial_encoder.weight)
 
-    def forward(self, batch, edge_attr: OptTensor = None,
-                pos_enc=None, batch_idx=None):
+    def forward(self, batch):
         x = batch.x
         edge_index = batch.edge_index
         edge_attr = batch.edge_attr
+        batch_idx = batch.batch
+
         if self.conv_type == 'local':
             out = self.local_forward(x, edge_index, edge_attr)[:len(batch_idx)]
 
         elif self.conv_type == 'global':
-            out = self.global_forward(x[:len(batch_idx)], pos_enc, batch_idx)
+            out = self.global_forward(x[:len(batch_idx)], batch_idx, batch.num_nodes)
 
         elif self.conv_type == 'full':
             out_local = self.local_forward(x, edge_index, edge_attr)[:len(batch_idx)]
-            out_global = self.global_forward(x[:len(batch_idx)], pos_enc, batch_idx)
+            out_global = self.global_forward(x[:len(batch_idx)], batch_idx, batch.num_nodes)
             out = torch.cat([out_local, out_global], dim=1)
 
         else:
@@ -199,13 +140,17 @@ class GOAT(MessagePassing):
 
         return batch
 
-    def global_forward(self, x, pos_enc, batch_idx):
+    def global_forward(self, x, batch_idx, num_nodes):
+        c = torch.randint(0, 64, (num_nodes,), dtype=torch.short).to(x.device)
+        self.register_buffer('c_idx', c)
+
 
         d, h = self.out_channels, self.heads
         scale = 1.0 / math.sqrt(d)
 
-        q_x = torch.cat([self.lin_proj_g(x), pos_enc], dim=1)
 
+        q_x = self.lin_proj_g(x)
+        q_x =  self.pre_trans(q_x)
         k_x = self.vq.get_k()
         v_x = self.vq.get_v()
 
@@ -220,7 +165,7 @@ class GOAT(MessagePassing):
         # print(f'c count mean:{c_count.float().mean().item()}, min:{c_count.min().item()}, max:{c_count.max().item()}')
 
         centroid_count = torch.zeros(self.num_centroids, dtype=torch.long).to(x.device)
-        centroid_count[c.to(torch.long)] = c_count
+        centroid_count[c.to(torch.long)] = c_count.to(x.device)
         dots += torch.log(centroid_count.view(1, 1, -1))
 
         attn = self.attn_fn(dots, dim=-1)
@@ -232,7 +177,8 @@ class GOAT(MessagePassing):
         # Update the centroids
         if self.training:
             x_idx = self.vq.update(q_x)
-            self.c_idx[batch_idx] = x_idx.squeeze().to(torch.short)
+
+            self.c_idx[batch_idx] = x_idx.squeeze().to(dtype=torch.short, device=x.device)
 
         return out
 
@@ -277,11 +223,11 @@ class GOAT(MessagePassing):
         #     key_j += edge_attr
 
         alpha = (query_i * key_j).sum(dim=-1) / math.sqrt(self.out_channels)
-        edge_dist, edge_dist_count = edge_attr[0], edge_attr[1]
+        edge_dist, edge_dist_count = edge_attr[0].unsqueeze(1), edge_attr[1]
 
-        print(alpha.shape)
-        alpha += self.spatial_encoder(edge_dist.int())
-
+        # print(edge_dist)
+        alpha += self.spatial_encoder(edge_dist.long())
+        print(alpha)
         if self.dist_count_norm:
             alpha -= torch.log(edge_dist_count).unsqueeze_(1)
 
@@ -297,3 +243,4 @@ class GOAT(MessagePassing):
         return (f'{self.__class__.__name__}({self.in_channels}, '
                 f'{self.out_channels}, heads={self.heads})')
 
+# batch norm

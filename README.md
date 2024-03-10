@@ -51,7 +51,7 @@ python main.py --cfg configs/GT/0_bench/GRIT/zinc/zinc-GRIT-RWDIFF.yaml  wandb.u
 - NodeFormer (included) `grit/layer/nodeformer_layer.py`
 - DIFFORMER (to be included) `grit/layer/difformer_layer.py`
 - GOAT (to be included for node-level)
-- NAGphormer (to be included for node-level)
+- NAGphormer (included, adapted to graph level) `grit/layer/nagphormer_layer.py`
 
 ### Implemented Graph Transformers with Global Attention
 - GRIT (included) `grit/layer/grit_layer.py`
