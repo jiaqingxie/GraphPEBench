@@ -46,9 +46,9 @@ model:
   graph_pooling: add
 gt:
   layer_type: GOAT
-  layers: 4
+  layers: 1
   dim_hidden: 64
-  num_heads: 2
+  num_heads: 1
   num_centroids: 64
   spatial_size: 64
   dropout: 0.0
@@ -68,9 +68,9 @@ gnn: # decoder --> san_graph = MLP + pooling
 optim:
   clip_grad_norm: True
   optimizer: adamW
-  weight_decay: 1e-5
+  weight_decay: 0.01
   base_lr: 1e-3
-  max_epoch: 2000
+  max_epoch: 5000
   num_warmup_epochs: 50
   scheduler: cosine_with_warmup
-  min_lr: 1e-6
+

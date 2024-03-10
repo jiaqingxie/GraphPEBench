@@ -49,8 +49,8 @@ python main.py --cfg configs/GT/0_bench/GRIT/zinc/zinc-GRIT-RWDIFF.yaml  wandb.u
 - Exphormer (included) `grit/layer/Exphormer.py`
 - GraphGPS (included) `grit/layer/gps_layer.py`
 - NodeFormer (included) `grit/layer/nodeformer_layer.py`
-- DIFFORMER (to be included) `grit/layer/difformer_layer.py`
-- GOAT (to be included for node-level)
+- DIFFORMER (included) `grit/layer/difformer_layer.py`
+- GOAT (included) `grit/layer/goat_layer.py`
 - NAGphormer (included, adapted to graph level) `grit/layer/nagphormer_layer.py`
 
 ### Implemented Graph Transformers with Global Attention
