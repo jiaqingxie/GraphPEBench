@@ -107,6 +107,7 @@ class SAT_model(torch.nn.Module):
         self.post_mp = GNNHead(dim_in=cfg.gnn.dim_inner, dim_out=dim_out)
 
     def forward(self, batch):
+
         for module in self.children():
             batch = module(batch)
 

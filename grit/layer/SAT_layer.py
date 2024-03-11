@@ -6,6 +6,7 @@ from .SAT.layers import TransformerEncoderLayer
 from einops import repeat
 from torch_geometric.graphgym.register import *
 import torch_geometric.utils as utils
+from multiprocessing import Pool
 class GraphTransformerEncoder(nn.TransformerEncoder):
     def forward(self, x, edge_index, complete_edge_index,
                 subgraph_node_index=None, subgraph_edge_index=None,
@@ -77,6 +78,7 @@ class SAT(nn.Module):
     def compute_degree(self, dataset):
         return 1. / torch.sqrt(1. + utils.degree(dataset.edge_index[0], dataset.num_nodes))
 
+
     def forward(self, data):
         x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
         degree = self.compute_degree(data)
@@ -86,6 +88,8 @@ class SAT(nn.Module):
         indicators = []
         edge_index_start = 0
 
+
+        ### bottleneck
         for node_idx in range(data.num_nodes):
             sub_nodes, sub_edge_index, _, edge_mask = utils.k_hop_subgraph(
                 node_idx,
@@ -101,14 +105,16 @@ class SAT(nn.Module):
             edge_attributes.append(data.edge_attr[edge_mask])  # CHECK THIS DIDN"T BREAK ANYTHING
             edge_index_start += len(sub_nodes)
 
+
+
         subgraph_node_idx = torch.cat(node_indices)
         subgraph_edge_index = torch.cat(edge_indices, dim=1)
         subgraph_indicator = torch.cat(indicators)
         subgraph_edge_attr = torch.cat(edge_attributes)
-        num_subgraph_nodes = len(subgraph_edge_index)
+        # num_subgraph_nodes = len(subgraph_edge_index)
 
 
-        node_depth = data.node_depth if hasattr(data, "node_depth") else None
+        # node_depth = data.node_depth if hasattr(data, "node_depth") else None
 
         if self.se == "khopgnn":
             subgraph_node_index = subgraph_node_idx
