@@ -23,6 +23,7 @@ from torch_geometric.utils import to_networkx
 from torch_geometric.utils import to_undirected, remove_self_loops, add_self_loops
 
 from ..utils import wl_positional_encoding, adj_mul
+import torch_geometric.utils as utils
 
 class DisableLogging:
     def __enter__(self):
@@ -282,8 +283,39 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
                             )
         data = transform(data)
 
+    ### Deal with two places where
+    # if cfg.gt.layer_type == "SAT":
+    #     data.degree = compute_degree(data)
+    #     node_indices = []
+    #     edge_indices = []
+    #     edge_attributes = []
+    #     indicators = []
+    #     edge_index_start = 0
+    #
+    #     for node_idx in range(data.num_nodes):
+    #         sub_nodes, sub_edge_index, _, edge_mask = utils.k_hop_subgraph(
+    #             node_idx,
+    #             cfg.gt.k_hop,
+    #             data.edge_index,
+    #             relabel_nodes=True,
+    #             num_nodes=data.num_nodes
+    #         )
+    #         node_indices.append(sub_nodes)
+    #         edge_indices.append(sub_edge_index + edge_index_start)
+    #         indicators.append(torch.zeros(sub_nodes.shape[0]).fill_(node_idx))
+    #         # if self.use_subgraph_edge_attr and graph.edge_attr is not None:
+    #         edge_attributes.append(data.edge_attr[edge_mask])  # CHECK THIS DIDN"T BREAK ANYTHING
+    #         edge_index_start += len(sub_nodes)
+    #
+    #     data.subgraph_node_idx = torch.cat(node_indices)
+    #     data.subgraph_edge_index = torch.cat(edge_indices, dim=1)
+    #     data.subgraph_indicator = torch.cat(indicators)
+    #     data.subgraph_edge_attr = torch.cat(edge_attributes)
+    #     data.num_subgraph_nodes = len(data.subgraph_edge_index)
     return data
 
+def compute_degree(dataset):
+    return 1. / torch.sqrt(1. + utils.degree(dataset.edge_index[0], dataset.num_nodes))
 
 def get_lap_decomp_stats(evals, evects, max_freqs, eigvec_norm='L2'):
     """Compute Laplacian eigen-decomposition-based PE stats of the given graph.
