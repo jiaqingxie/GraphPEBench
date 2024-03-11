@@ -28,7 +28,7 @@ class RWDIFFNodeEncoder(torch.nn.Module):
     def forward(self, batch):
 
 
-        pos_enc = batch.pos_enc.to("cuda:0")
+        pos_enc = batch.pos_enc.to(batch.x.device)
         # pos_enc = torch.tensor(batch.pos_enc).to("cuda:0")
         empty_mask = torch.isnan(pos_enc)  # (Num nodes) x (Num Eigenvectors)
         pos_enc[empty_mask] = 0.  # (Num nodes) x (Num Eigenvectors)

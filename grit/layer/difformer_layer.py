@@ -65,8 +65,8 @@ def full_attention_conv(qs, ks, vs, kernel, output_attn=False):
 """
 def gcn_conv(x, edge_index, edge_weight):
     N = x.size(0)  # Number of nodes
-    values = torch.ones(edge_index.size(1)).to("cuda:0") # Assuming unweighted edges
-    adj = torch.sparse_coo_tensor(edge_index.to("cuda:0"), values, torch.Size([N, N]))
+    values = torch.ones(edge_index.size(1)).to(x.device) # Assuming unweighted edges
+    adj = torch.sparse_coo_tensor(edge_index.to(x.device), values, torch.Size([N, N]))
 
     gcn_conv_output = []
     for i in range(x.shape[1]):

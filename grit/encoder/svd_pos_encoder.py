@@ -93,7 +93,7 @@ class SVDNodeEncoder(torch.nn.Module):
     def forward(self, batch):
 
         tensors = [torch.tensor(array) for array in batch.pos_enc]
-        pos_enc = torch.cat(tensors, dim=0).to("cuda:0")
+        pos_enc = torch.cat(tensors, dim=0).to(batch.x.device)
         # pos_enc = torch.tensor(batch.pos_enc, device = "cuda:0").float() # (Num nodes) x (Num Eigenvectors) x 2
 
         empty_mask = torch.isnan(pos_enc)  # (Num nodes) x (Num Eigenvectors) x 2

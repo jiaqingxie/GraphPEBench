@@ -48,6 +48,7 @@ gt:
   layer_type: GraphiT
   dim_hidden: 64
   num_heads: 4
+  layers: 2
 gnn: # decoder --> san_graph = MLP + pooling
   head: san_graph
   layers_pre_mp: 0

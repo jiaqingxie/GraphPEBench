@@ -4,13 +4,16 @@ metric_best: mae
 metric_agg: argmin
 tensorboard_each_run: True  # Log to Tensorboard each run
 accelerator: "cuda:0"
+repeat: 4
 mlflow:
   use: False
   project: Exp
-  name: zinc-GRIT-RRWP
+  name: zinc-GraphGPS-ESLapPE
 wandb:
-  use: False
-  project: ZINC
+  use: True
+  project: "PEGT"
+  name: "ZINC-GraphGPS-ESLapPE"
+  entity: jiaqing
 dataset:
   format: PyG-ZINC
   name: subset
@@ -18,19 +21,19 @@ dataset:
   task_type: regression
   transductive: False
   node_encoder: True
-  node_encoder_name: TypeDictNode+WLPE
+  node_encoder_name: TypeDictNode+EquivStableLapPE
   node_encoder_num_types: 21 # actually 21 in Zinc-12k, 28 in Zinc-full
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: TypeDictEdge
   edge_encoder_num_types: 4
   edge_encoder_bn: False
-posenc_WLPE:
+posenc_EquivStableLapPE:
   enable: True
-  model: DeepSet
-  dim_pe: 4 #( dim_pe + 60 = gt.dim_hidden (in below ) )
-  layers: 2
-  n_heads: 4  # Only used when `posenc.model: Transformer`
+  eigen:
+    laplacian_norm: none
+    eigvec_norm: L2
+    max_freqs: 8
   raw_norm_type: none
 train:
   mode: custom
@@ -40,14 +43,14 @@ train:
   ckpt_best: True  # WARNING: Checkpoint every epoch a better model is found may increase I/O significantly.
   ckpt_clean: True # Delete old ckpt each time.
 model:
-  type: GritTransformer
+  type: GPSModel
   loss_fun: l1
   edge_decoding: dot
   graph_pooling: add
 gt:
-  layer_type: GritTransformer
+  layer_type: GINE+Transformer
   layers: 10
-  n_heads: 8
+  n_heads: 4
   dim_hidden: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
   dropout: 0.0
   layer_norm: False

@@ -65,5 +65,3 @@ python main.py --cfg configs/GT/0_bench/GRIT/zinc/zinc-GRIT-RWDIFF.yaml  wandb.u
 dataset is the name of the dataset, xx is the attention module and yy is your positional encoding
 - Scripts to execute are available under `./scripts/xxx.sh`
   - will run 4 trials of experiments parallelly on `GPU:0,1,2,3`. (To be updated)
-
-
