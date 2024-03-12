@@ -62,7 +62,7 @@ class FeatureEncoder(torch.nn.Module):
             batch = module(batch)
         return batch
 
-
+# @register_network('MultiModel')
 class MultiModel(torch.nn.Module):
     """Multiple layer types can be combined here.
     """
