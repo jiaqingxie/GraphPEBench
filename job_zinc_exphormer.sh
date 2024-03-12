@@ -4,9 +4,9 @@
 #SBATCH --error=/itet-stor/jiaxie/net_scratch/pe4gt/jobs/%j.err # where to store error messages
 #SBATCH --mem=20G
 #SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:01
+#SBATCH --gres=gpu:rtx_a6000:8
 #SBATCH --exclude=tikgpu10
-#SBATCH --nodelist=tikgpu07
+#SBATCH --nodelist=tikgpu08
 #CommentSBATCH --account=tik-internal
 #CommentSBATCH --constraint='titan_rtx|tesla_v100|titan_xp|a100_80gb'
 
@@ -49,10 +49,16 @@ echo "Conda activated"
 cd ${DIRECTORY}
 
 # Execute your code
-python main.py --cfg configs/GT/0_bench/Exphormer/zinc/zinc-Exphormer-ESLapPE.yaml  wandb.use True accelerator "cuda:0" seed 0 repeat 5 &
-python main.py --cfg configs/GT/0_bench/Exphormer/zinc/zinc-Exphormer-GCKN.yaml  wandb.use True accelerator "cuda:1" seed 0 repeat 5 &
-python main.py --cfg configs/GT/0_bench/Exphormer/zinc/zinc-Exphormer-PPR.yaml  wandb.use True accelerator "cuda:2" seed 0 repeat 5 &
-python main.py --cfg configs/GT/0_bench/Exphormer/zinc/zinc-Exphormer-WLPE.yaml  wandb.use True accelerator "cuda:3" seed 0 repeat 5 &
+python main.py --cfg configs/GT/0_bench/Exphormer/zinc/zinc-Exphormer-ESLapPE.yaml wandb.use True accelerator "cuda:0" seed 0 repeat 4 &
+python main.py --cfg configs/GT/0_bench/Exphormer/zinc/zinc-Exphormer-WLPE.yaml wandb.use True accelerator "cuda:1" seed 0 repeat 4 &
+python main.py --cfg configs/GT/0_bench/Exphormer/zinc/zinc-Exphormer-RWDIFF.yaml wandb.use True accelerator "cuda:2" seed 0 repeat 4 &
+python main.py --cfg configs/GT/0_bench/Exphormer/zinc/zinc-Exphormer-GCKN.yaml wandb.use True accelerator "cuda:3" seed 0 repeat 4 &
+python main.py --cfg configs/GT/0_bench/Exphormer/zinc/zinc-Exphormer-RRWP.yaml wandb.use True accelerator "cuda:4" seed 0 repeat 4 &
+python main.py --cfg configs/GT/0_bench/Exphormer/zinc/zinc-Exphormer-PPR.yaml wandb.use True accelerator "cuda:5" seed 0 repeat 4 &
+python main.py --cfg configs/GT/0_bench/Exphormer/zinc/zinc-Exphormer-RWSE.yaml wandb.use True accelerator "cuda:6" seed 0 repeat 4 &
+python main.py --cfg configs/GT/0_bench/Exphormer/zinc/zinc-Exphormer-SignNet.yaml wandb.use True accelerator "cuda:7" seed 0 repeat 4 &
+
+wait
 
 # Send more noteworthy information to the output log
 echo "Finished at: $(date)"

@@ -43,7 +43,7 @@ class PPRNodeEncoder(torch.nn.Module):
         #
         # U_reduced = U[:, :cfg.posenc_PPR.eigen.max_freqs]
         tensors = [torch.tensor(array) for array in batch.pos_enc]
-        pos_enc = torch.cat(tensors, dim=0).to("cuda:0")
+        pos_enc = torch.cat(tensors, dim=0).to(batch.x.device)
         # pos_enc = torch.tensor(batch.pos_enc).to("cuda:0")
 
         empty_mask = torch.isnan(pos_enc)  # (Num nodes) x (Num Eigenvectors)

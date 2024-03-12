@@ -39,7 +39,7 @@ posenc_PPR:
   eigen:
     laplacian_norm: none
     eigvec_norm: L2
-    max_freqs: 8 # change dim for pos_enc here !!!!!!
+    max_freqs: 4 # change dim for pos_enc here !!!!!!
   model: DeepSet
   dim_pe: 4
   layers: 2

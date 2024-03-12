@@ -8,7 +8,7 @@ repeat: 4
 mlflow:
   use: False
   project: Exp
-  name: zinc-GraphGPS-ESLapPE
+  name: zinc-Exphormer-WLPE
 wandb:
   use: True
   project: "PEGT"
