@@ -45,7 +45,9 @@ class RWDIFFNodeEncoder(torch.nn.Module):
 
         batch.x = torch.cat((h, pos_enc), 1)
         # Keep PE separate in a variable
-        batch.pe_EquivStableLapPE = pos_enc
+        batch.pos_enc = pos_enc
+
+        print(batch)
 
         return batch
 

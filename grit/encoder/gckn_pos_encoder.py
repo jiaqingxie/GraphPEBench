@@ -3,6 +3,8 @@ import torch.nn as nn
 import torch_geometric.graphgym.register as register
 from torch_geometric.graphgym.config import cfg
 from torch_geometric.graphgym.register import register_node_encoder
+import time
+
 
 
 @register_node_encoder('GCKN')
@@ -32,7 +34,7 @@ class GCKNNodeEncoder(torch.nn.Module):
         norm_type = pecfg.raw_norm_type.lower()  # Raw PE normalization layer type
         self.pass_as_var = pecfg.pass_as_var  # Pass PE also as a separate variable
         self.pass_as_var = True  # fixme: for ablation study only
-
+        self.linear_encoder_eigenvec = nn.Linear(max_freqs, dim_emb)
         if dim_emb - dim_pe < 1:
             raise ValueError(f"LapPE size {dim_pe} is too large for "
                              f"desired embedding size of {dim_emb}.")
@@ -90,6 +92,7 @@ class GCKNNodeEncoder(torch.nn.Module):
             self.post_mlp = nn.Sequential(*layers)
 
 
+
     def forward(self, batch):
         if not (hasattr(batch, 'EigVals') and hasattr(batch, 'EigVecs')):
             raise ValueError("Precomputed eigen values and vectors are "
@@ -139,5 +142,5 @@ class GCKNNodeEncoder(torch.nn.Module):
         batch.x = torch.cat((h, pos_enc), 1)
         # Keep PE also separate in a variable (e.g. for skip connections to input)
         if self.pass_as_var:
-            batch.pe_LapPE = pos_enc
+            batch.pos_enc = pos_enc
         return batch
