@@ -47,8 +47,6 @@ class RWDIFFNodeEncoder(torch.nn.Module):
         # Keep PE separate in a variable
         batch.pos_enc = pos_enc
 
-        print(batch)
-
         return batch
 
 

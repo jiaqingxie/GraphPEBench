@@ -4,9 +4,9 @@
 #SBATCH --error=/itet-stor/jiaxie/net_scratch/pe4gt/jobs/%j.err # where to store error messages
 #SBATCH --mem=20G
 #SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:geforce_rtx_2080_ti:1
+#SBATCH --gres=gpu:titan_xp:3
 #SBATCH --exclude=tikgpu10
-#SBATCH --nodelist=artongpu01
+#SBATCH --nodelist=tikgpu03
 #CommentSBATCH --account=tik-internal
 #CommentSBATCH --constraint='titan_rtx|tesla_v100|titan_xp|a100_80gb'
 
@@ -50,7 +50,9 @@ cd ${DIRECTORY}
 
 # Execute your code
 
-python main.py --cfg configs/GT/0_bench/Exphormer/mnist/mnist-Exphormer-PPR.yaml wandb.use True accelerator "cuda:0" seed 3
+python main.py --cfg configs/GT/0_bench/Exphormer/mnist/mnist-Exphormer-RWSE.yaml wandb.use True accelerator "cuda:0" seed 1 &
+python main.py --cfg configs/GT/0_bench/Exphormer/mnist/mnist-Exphormer-RWSE.yaml wandb.use True accelerator "cuda:1" seed 2 &
+python main.py --cfg configs/GT/0_bench/Exphormer/mnist/mnist-Exphormer-RWSE.yaml wandb.use True accelerator "cuda:3" seed 3 &
 
 wait
 # Send more noteworthy information to the output log

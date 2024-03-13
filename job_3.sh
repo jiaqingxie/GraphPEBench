@@ -4,7 +4,7 @@
 #SBATCH --error=/itet-stor/jiaxie/net_scratch/pe4gt/jobs/%j.err # where to store error messages
 #SBATCH --mem=20G
 #SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:rtx_a6000:4
+#SBATCH --gres=gpu:rtx_a6000:2
 #SBATCH --exclude=tikgpu10
 #SBATCH --nodelist=tikgpu08
 #CommentSBATCH --account=tik-internal
@@ -50,12 +50,10 @@ cd ${DIRECTORY}
 
 # Execute your code
 
-python main.py --cfg configs/GT/0_bench/Exphormer/mnist/mnist-Exphormer-GCKN.yaml wandb.use True accelerator "cuda:0" seed 0 &
-python main.py --cfg configs/GT/0_bench/Exphormer/mnist/mnist-Exphormer-GCKN.yaml wandb.use True accelerator "cuda:1" seed 1 &
-python main.py --cfg configs/GT/0_bench/Exphormer/mnist/mnist-Exphormer-GCKN.yaml wandb.use True accelerator "cuda:2" seed 2 &
-python main.py --cfg configs/GT/0_bench/Exphormer/mnist/mnist-Exphormer-GCKN.yaml wandb.use True accelerator "cuda:3" seed 3 &
-
+python main.py --cfg configs/GT/0_bench/Exphormer/cifar10/cifar10-Exphormer-ESLapPE.yaml wandb.use True accelerator "cuda:0" seed 0 &
+python main.py --cfg configs/GT/0_bench/Exphormer/cifar10/cifar10-Exphormer-ESLapPE.yaml wandb.use True accelerator "cuda:1" seed 1 &
 wait
+
 # Send more noteworthy information to the output log
 echo "Finished at: $(date)"
 
