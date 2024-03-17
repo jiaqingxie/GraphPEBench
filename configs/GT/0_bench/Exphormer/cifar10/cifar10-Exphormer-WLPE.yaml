@@ -7,11 +7,11 @@ num_workers: 10
 mlflow:
   use: False
   project: Exp
-  name: CIFAR10-Exphormer-ESLapPE
+  name: CIFAR10-Exphormer-WLPE
 wandb:
   use: True
   project: "PEGT"
-  name: "CIFAR10-Exphormer-ESLapPE"
+  name: "CIFAR10-Exphormer-WLPE"
   entity: jiaqing
 dataset:
   pe_transform_on_the_fly: False # compute PE on the fly to save memory when launching many experiments in parallel
@@ -21,17 +21,17 @@ dataset:
   task_type: classification
   transductive: False
   node_encoder: True
-  node_encoder_name: LinearNode+EquivStableLapPE
+  node_encoder_name: LinearNode+WLPE
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: LinearEdge
   edge_encoder_bn: False
-posenc_EquivStableLapPE:
+posenc_WLPE:
   enable: True
-  eigen:
-    laplacian_norm: none
-    eigvec_norm: L2
-    max_freqs: 8
+  model: DeepSet
+  dh: 8 #( dim_pe + 60 = gt.dim_hidden (in below ) )
+  layers: 2
+  n_heads: 4  # Only used when `posenc.model: Transformer`
   raw_norm_type: none
 train:
   mode: custom
@@ -44,16 +44,16 @@ model:
   edge_decoding: dot
   graph_pooling: mean
 gt:
-  layer_type: CustomGatedGCN+Exphormer
+  layer_type: MPNN+Exphormer
   layers: 5
   n_heads: 4
   dim_hidden: 40  # `gt.dim_hidden` must match `gnn.dim_inner`
-  dropout: 0.1
+  dropout: 0.0
   layer_norm: False
   batch_norm: True
 #  bn_momentum: 0.01
   update_e: True
-  attn_dropout: 0.1
+  attn_dropout: 0.2
   attn:
     clamp: 5.
     act: 'relu'
@@ -75,7 +75,7 @@ gnn:
   dim_inner: 40  # `gt.dim_hidden` must match `gnn.dim_inner`
   batchnorm: False
   act: relu
-  dropout: 0.1
+  dropout: 0.0
   agg: mean
   normalize_adj: False
 optim:
@@ -83,6 +83,6 @@ optim:
   optimizer: adamW
   weight_decay: 1e-5
   base_lr: 0.001
-  max_epoch: 150
+  max_epoch: 100
   scheduler: cosine_with_warmup
   num_warmup_epochs: 5

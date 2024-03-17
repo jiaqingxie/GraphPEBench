@@ -4,9 +4,9 @@
 #SBATCH --error=/itet-stor/jiaxie/net_scratch/pe4gt/jobs/%j.err # where to store error messages
 #SBATCH --mem=20G
 #SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:rtx_a6000:2
+#SBATCH --gres=gpu:geforce_rtx_3090:1
 #SBATCH --exclude=tikgpu10
-#SBATCH --nodelist=tikgpu08
+#SBATCH --nodelist=tikgpu07
 #CommentSBATCH --account=tik-internal
 #CommentSBATCH --constraint='titan_rtx|tesla_v100|titan_xp|a100_80gb'
 
@@ -48,11 +48,9 @@ conda activate ${CONDA_ENVIRONMENT}
 echo "Conda activated"
 cd ${DIRECTORY}
 
-# Execute your code
+# Execute your code850693.out
 
-python main.py --cfg configs/GT/0_bench/Exphormer/cifar10/cifar10-Exphormer-ESLapPE.yaml wandb.use True accelerator "cuda:0" seed 0 &
-python main.py --cfg configs/GT/0_bench/Exphormer/cifar10/cifar10-Exphormer-ESLapPE.yaml wandb.use True accelerator "cuda:1" seed 1 &
-wait
+python main.py --cfg configs/GT/0_bench/Exphormer/cifar10/cifar10-Exphormer-ESLapPE.yaml wandb.use True accelerator "cuda:0" seed 7
 
 # Send more noteworthy information to the output log
 echo "Finished at: $(date)"
