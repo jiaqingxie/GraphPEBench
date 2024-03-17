@@ -57,6 +57,8 @@ class PPRNodeEncoder(torch.nn.Module):
             h = self.linear_encoder(pos_enc)
         else:
             h = batch.x
+
+
         batch.x = torch.cat((h, pos_enc), 1)
         # Keep PE separate in a variable
         batch.pos_enc = pos_enc
