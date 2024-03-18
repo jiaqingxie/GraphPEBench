@@ -3,7 +3,7 @@ metric_best: accuracy
 tensorboard_each_run: True  # Log to Tensorboard each run
 accelerator: "cuda:0"
 repeat: 4
-num_workers: 10
+num_workers: 4
 mlflow:
   use: False
   project: Exp
@@ -44,16 +44,16 @@ model:
   edge_decoding: dot
   graph_pooling: mean
 gt:
-  layer_type: Exphormer
+  layer_type: CustomGatedGCN+Exphormer
   layers: 5
   n_heads: 4
-  dim_hidden: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
-  dropout: 0.0
+  dim_hidden: 44  # `gt.dim_hidden` must match `gnn.dim_inner`
+  dropout: 0.1
   layer_norm: False
   batch_norm: True
 #  bn_momentum: 0.01
   update_e: True
-  attn_dropout: 0.2
+  attn_dropout: 0.1
   attn:
     clamp: 5.
     act: 'relu'
@@ -72,10 +72,10 @@ gnn:
   head: default
   layers_pre_mp: 0
   layers_post_mp: 2
-  dim_inner: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
+  dim_inner: 44  # `gt.dim_hidden` must match `gnn.dim_inner`
   batchnorm: False
   act: relu
-  dropout: 0.0
+  dropout: 0.1
   agg: mean
   normalize_adj: False
 optim:
@@ -83,6 +83,6 @@ optim:
   optimizer: adamW
   weight_decay: 1e-5
   base_lr: 0.001
-  max_epoch: 100
+  max_epoch: 150
   scheduler: cosine_with_warmup
   num_warmup_epochs: 5

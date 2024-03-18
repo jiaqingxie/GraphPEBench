@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:geforce_rtx_3090:1
 #SBATCH --exclude=tikgpu10
-#SBATCH --nodelist=tikgpu09
+#SBATCH --nodelist=tikgpu06
 #CommentSBATCH --account=tik-internal
 #CommentSBATCH --constraint='titan_rtx|tesla_v100|titan_xp|a100_80gb'
 
@@ -50,7 +50,7 @@ cd ${DIRECTORY}
 
 # Execute your code850693.out
 
-python main.py --cfg configs/GT/0_bench/Exphormer/cifar10/cifar10-Exphormer-PPR.yaml wandb.use True accelerator "cuda:0" seed 100
+python main.py --cfg configs/GT/0_bench/Exphormer/cifar10/cifar10-Exphormer-RWSE.yaml wandb.use True accelerator "cuda:0" seed 0
 
 # Send more noteworthy information to the output log
 echo "Finished at: $(date)"
