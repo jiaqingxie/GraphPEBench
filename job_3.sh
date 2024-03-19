@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:geforce_rtx_3090:1
 #SBATCH --exclude=tikgpu10
-#SBATCH --nodelist=tikgpu07
+#SBATCH --nodelist=tikgpu06
 #CommentSBATCH --account=tik-internal
 #CommentSBATCH --constraint='titan_rtx|tesla_v100|titan_xp|a100_80gb'
 
@@ -50,7 +50,7 @@ cd ${DIRECTORY}
 
 # Execute your code850693.out
 
-python main.py --cfg configs/GT/0_bench/Exphormer/cluster/cluster-Exphormer-ESLapPE.yaml wandb.use True accelerator "cuda:0" seed 0
+python main.py --cfg configs/GT/0_bench/Exphormer/cluster/cluster-Exphormer-ESLapPE.yaml wandb.use True accelerator "cuda:0" seed 2024
 
 # Send more noteworthy information to the output log
 echo "Finished at: $(date)"
