@@ -9,12 +9,21 @@ from torch_geometric.graphgym.config import cfg
 from torch_geometric.graphgym.loss import compute_loss
 from torch_geometric.graphgym.register import register_train
 from torch_geometric.graphgym.utils.epoch import is_eval_epoch, is_ckpt_epoch
-
+import torch.nn.functional as F
 from grit.loss.subtoken_prediction_loss import subtoken_cross_entropy
 from grit.utils import cfg_to_dict, flatten_dict, make_wandb_name, mlflow_log_cfgdict
 import warnings
 from collections import defaultdict
 
+
+def arxiv_cross_entropy(pred, true, split_idx):
+    true = true.squeeze(-1)
+    if pred.ndim > 1 and true.ndim == 1:
+        pred_score = F.log_softmax(pred[split_idx], dim=-1)
+        loss =  F.nll_loss(pred_score, true[split_idx])
+    else:
+        raise ValueError("In ogbn cross_entropy calculation dimensions did not match.")
+    return loss, pred_score
 
 def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation):
     model.train()
@@ -30,6 +39,11 @@ def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation)
             loss, pred_score = subtoken_cross_entropy(pred, true)
             _true = true
             _pred = pred_score
+        elif cfg.dataset.name == 'ogbn-arxiv':
+            split_idx = loader.dataset.split_idx['train'].to(torch.device(cfg.device))
+            loss, pred_score = arxiv_cross_entropy(pred, true, split_idx)
+            _true = true[split_idx].detach().to('cpu', non_blocking=True)
+            _pred = pred_score.detach().to('cpu', non_blocking=True)
         else:
             loss, pred_score = compute_loss(pred, true)
             _true = true.detach().to('cpu', non_blocking=True)
@@ -67,6 +81,11 @@ def eval_epoch(logger, loader, model, split='val'):
             loss, pred_score = subtoken_cross_entropy(pred, true)
             _true = true
             _pred = pred_score
+        elif cfg.dataset.name == 'ogbn-arxiv':
+            index_split = loader.dataset.split_idx[split].to(torch.device(cfg.device))
+            loss, pred_score = arxiv_cross_entropy(pred, true, index_split)
+            _true = true[index_split].detach().to('cpu', non_blocking=True)
+            _pred = pred_score.detach().to('cpu', non_blocking=True)
         else:
             loss, pred_score = compute_loss(pred, true)
             _true = true.detach().to('cpu', non_blocking=True)

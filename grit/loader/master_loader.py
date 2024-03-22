@@ -9,6 +9,7 @@ import torch
 import torch_geometric.transforms as T
 from numpy.random import default_rng
 from ogb.graphproppred import PygGraphPropPredDataset
+from ogb.nodeproppred import PygNodePropPredDataset
 from torch_geometric.datasets import (GNNBenchmarkDataset, Planetoid, TUDataset,
                                       WikipediaNetwork, ZINC)
 from torch_geometric.graphgym.config import cfg
@@ -26,7 +27,10 @@ from grit.transform.transforms import (pre_transform_in_memory,
                                        typecast_x, concat_x_and_pos,
                                        clip_graphs_to_size)
 
-
+from grit.transform.dist_transforms import (add_dist_features, add_reverse_edges,
+                                                 add_self_loops, effective_resistances,
+                                                 effective_resistance_embedding,
+                                                 effective_resistances_from_embedding)
 def log_loaded_dataset(dataset, format, name):
     logging.info(f"[*] Loaded dataset '{name}' from '{format}':")
     logging.info(f"  {dataset.data}")
@@ -153,7 +157,8 @@ def load_dataset_master(format, name, dataset_dir):
 
         elif name.startswith('peptides-'):
             dataset = preformat_Peptides(dataset_dir, name)
-
+        elif name.startswith('ogbn'):
+            dataset = preformat_ogbn(dataset_dir, name)
         ### Link prediction datasets.
         elif name.startswith('ogbl-'):
             # GraphGym default loader.
@@ -224,7 +229,8 @@ def load_dataset_master(format, name, dataset_dir):
             else:
                 dataset.transform = T.compose([pe_transform, dataset.transform])
 
-
+    if name == 'ogbn-arxiv' or name == 'ogbn-proteins':
+        return dataset
     # Set standard dataset train/val/test splits
     if hasattr(dataset, 'split_idxs'):
         set_dataset_splits(dataset, dataset.split_idxs)
@@ -633,7 +639,36 @@ def preformat_TUDataset(dataset_dir, name):
     dataset = TUDataset(dataset_dir, name, pre_transform=func)
     return dataset
 
+def preformat_ogbn(dataset_dir, name):
+  if name == 'ogbn-arxiv' or name == 'ogbn-proteins':
+    dataset = PygNodePropPredDataset(name=name)
+    if name == 'ogbn-arxiv':
+      pre_transform_in_memory(dataset, partial(add_reverse_edges))
+      if cfg.prep.add_self_loops:
+        pre_transform_in_memory(dataset, partial(add_self_loops))
+    if name == 'ogbn-proteins':
+      pre_transform_in_memory(dataset, partial(move_node_feat_to_x))
+      pre_transform_in_memory(dataset, partial(typecast_x, type_str='float'))
+    split_dict = dataset.get_idx_split()
+    split_dict['val'] = split_dict.pop('valid')
+    dataset.split_idx = split_dict
+    return dataset
 
+
+     #  We do not need to store  these separately.
+     # storing separatelymight simplify the duplicated logger code in main.py
+     # s_dict = dataset.get_idx_split()
+     # dataset.split_idxs = [s_dict[s] for s in ['train', 'valid', 'test']]
+     # convert the adjacency list to an edge_index list.
+     # data = dataset[0]
+     # coo = data.adj_t.coo()
+     # data is only a deep copy.  Need to write to the dataset object itself.
+     # dataset[0].edge_index = torch.stack(coo[:2])
+     # del dataset[0]['adj_t'] # remove the adjacency list after the edge_index is created.
+
+     # return dataset
+  else:
+     ValueError(f"Unknown ogbn dataset '{name}'.")
 def preformat_ZINC(dataset_dir, name):
     """Load and preformat ZINC datasets.
 

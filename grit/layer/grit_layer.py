@@ -14,6 +14,8 @@ from yacs.config import CfgNode as CN
 
 import warnings
 
+from .GRITSparseConv import GRITSparseConv
+
 def pyg_softmax(src, index, num_nodes=None):
     r"""Computes a sparsely evaluated softmax.
     Given a value tensor :attr:`src`, this function first groups the values
@@ -196,6 +198,15 @@ class GritTransformerLayer(nn.Module):
             scaled_attn =cfg.attn.get("scaled_attn", False),
             no_qk=cfg.attn.get("no_qk", False),
         )
+        # self.attention = GRITSparseConv(
+        #     in_channels= in_dim,
+        #     out_channels= out_dim // num_heads,
+        #     heads= num_heads,
+        #     concat=False,
+        #     beta = False,
+        #     dropout= 0.,
+        #     clamp= 5.0,
+        # )
 
         if cfg.attn.get('graphormer_attn', False):
             self.attention = MultiHeadAttentionLayerGraphormerSparse(
@@ -262,6 +273,7 @@ class GritTransformerLayer(nn.Module):
         # multi-head attention out
 
         h_attn_out, e_attn_out = self.attention(batch)
+        # h_attn_out, e_attn_out = self.attention(batch.x, batch.edge_index, batch.edge_attr)
 
         h = h_attn_out.view(num_nodes, -1)
         h = F.dropout(h, self.dropout, training=self.training)

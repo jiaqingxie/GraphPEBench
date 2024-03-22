@@ -7,16 +7,16 @@ num_workers: 4
 mlflow:
   use: False
   project: Exp
-  name: CIFAR10-GPS-SignNet
+  name: CLUSTER-Exphormer-SignNet
 wandb:
   use: True
   project: "PEGT"
-  name: "CIFAR10-GPS-SignNet"
+  name: "CLUSTER-Exphormer-SignNet"
   entity: jiaqing
 dataset:
   pe_transform_on_the_fly: False # compute PE on the fly to save memory when launching many experiments in parallel
   format: PyG-GNNBenchmarkDataset
-  name: CIFAR10
+  name: CLUSTER
   task: graph
   task_type: classification
   transductive: False
@@ -24,7 +24,7 @@ dataset:
   node_encoder_name: LinearNode+SignNet
   node_encoder_bn: False
   edge_encoder: True
-  edge_encoder_name: LinearEdge
+  edge_encoder_name: DummyEdge
   edge_encoder_bn: False
 posenc_SignNet:
   dim_pe: 8
@@ -37,7 +37,7 @@ posenc_SignNet:
   model: MLP
   n_heads: 4
   pass_as_var: false
-  phi_hidden_dim: 40
+  phi_hidden_dim: 32
   phi_out_dim: 4
   post_layers: 2
   raw_norm_type: none
@@ -47,25 +47,41 @@ train:
   eval_period: 1
   ckpt_period: 100
 model:
-  type: GPSModel
+  type: MultiModel
   loss_fun: cross_entropy
   edge_decoding: dot
-  graph_pooling: mean
-gt:  # Hyperparameters optimized for ~100k budget.
-  layer_type: CustomGatedGCN+Transformer
-  layers: 3
-  n_heads: 4
-  dim_hidden: 52  # `gt.dim_hidden` must match `gnn.dim_inner`
-  dropout: 0.0
-  attn_dropout: 0.5
+#  graph_pooling: mean
+gt:
+  layer_type: CustomGatedGCN+Exphormer
+  layers: 20
+  n_heads: 8
+  dim_hidden: 32  # `gt.dim_hidden` must match `gnn.dim_inner`
+  dropout: 0.1
   layer_norm: False
   batch_norm: True
+#  bn_momentum: 0.01
+  update_e: True
+  attn_dropout: 0.5
+  attn:
+    clamp: 5.
+    act: 'relu'
+    full_attn: True
+    edge_enhance: True
+    O_e: True
+    norm_e: True
+    fwl: False
+prep:
+  add_edge_index: True
+  num_virt_node: 3
+  use_exp_edges: False
+  exp: True
+  exp_deg: 3
 gnn:
-  head: default
+  head: inductive_node
   layers_pre_mp: 0
-  layers_post_mp: 2
-  dim_inner: 52  # `gt.dim_hidden` must match `gnn.dim_inner`
-  batchnorm: False
+  layers_post_mp: 3
+  dim_inner: 32  # `gt.dim_hidden` must match `gnn.dim_inner`
+  batchnorm: True
   act: relu
   dropout: 0.0
   agg: mean
@@ -74,7 +90,7 @@ optim:
   clip_grad_norm: True
   optimizer: adamW
   weight_decay: 1e-5
-  base_lr: 0.001
-  max_epoch: 150
+  base_lr: 0.0002
+  max_epoch: 200
   scheduler: cosine_with_warmup
   num_warmup_epochs: 5

@@ -215,8 +215,8 @@ class GRITSparseConv(MessagePassing):
         edge_attr = score
         self._alpha = edge_attr
 
-        # score_1 = oe.contract("ehd, dhc->ehc", score, self.W_A, backend="torch")
-        score_1 = score
+        score_1 = oe.contract("ehd, dhc->ehc", score, self.W_A, backend="torch")
+        # score_1 = score
         score_1 = softmax(score_1, index, ptr, size_i)
         if self.clamp is not None:
             score_1 = torch.clamp(score_1, min=-self.clamp, max=self.clamp)
@@ -225,8 +225,8 @@ class GRITSparseConv(MessagePassing):
 
         score_1 = F.dropout(score_1, p=self.dropout, training=self.training)
 
-        # score_2 = oe.contract("ehd, dhc->ehc", score, self.W_EV, backend="torch")
-        score_2 = score
+        score_2 = oe.contract("ehd, dhc->ehc", score, self.W_EV, backend="torch")
+        # score_2 = score
         # 3. Sparse aggregation by neighbourhoods
         out = value_j + score_2
         out = out * score_1.view(-1, self.heads, 1)

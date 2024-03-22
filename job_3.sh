@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:geforce_rtx_3090:1
 #SBATCH --exclude=tikgpu10
-#SBATCH --nodelist=tikgpu07
+#SBATCH --nodelist=tikgpu06
 #CommentSBATCH --account=tik-internal
 #CommentSBATCH --constraint='titan_rtx|tesla_v100|titan_xp|a100_80gb'
 
@@ -48,9 +48,9 @@ conda activate ${CONDA_ENVIRONMENT}
 echo "Conda activated"
 cd ${DIRECTORY}
 
-# Execute your code850693.out
+# Execute your code
 
-python main.py --cfg configs/GT/0_bench/GraphGPS/cifar10/cifar10-GPS-SignNet.yaml wandb.use True accelerator "cuda:0" seed 2024
+python main.py --cfg configs/GT/0_bench/GraphGPS/cluster/cluster-GPS-ESLapPE.yaml  wandb.use True accelerator "cuda:0" seed 42
 # Send more noteworthy information to the output log
 echo "Finished at: $(date)"
 

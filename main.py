@@ -158,6 +158,14 @@ if __name__ == '__main__':
         # Set machine learning pipeline
         loaders = create_loader()
         loggers = create_logger()
+        if cfg.dataset.name == 'ogbn-arxiv' or cfg.dataset.name == 'ogbn-proteins':
+            loggers_2 = create_logger()
+            loggers_3 = create_logger()
+            loggers_2[0].name = "val"
+            loggers_3[0].name = "test"
+            loggers.extend(loggers_2)
+            loggers.extend(loggers_3)
+            loaders = loaders*3
         model = create_model()
         if cfg.pretrained.dir:
             model = init_model_from_pretrained(
