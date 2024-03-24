@@ -151,7 +151,9 @@ class GritTransformerLayer(nn.Module):
     def __init__(self, in_dim, out_dim, num_heads,
                  dropout=0.0,
                  attn_dropout=0.0,
-                 layer_norm=False, batch_norm=True,
+                 layer_norm=False,
+                 batch_norm=True,
+                 sparse = False,
                  residual=True,
                  act='relu',
                  norm_e=True,
@@ -170,6 +172,8 @@ class GritTransformerLayer(nn.Module):
         self.residual = residual
         self.layer_norm = layer_norm
         self.batch_norm = batch_norm
+        self.sparse = sparse
+
 
         # -------
         self.update_e = cfg.get("update_e", True)
@@ -184,29 +188,32 @@ class GritTransformerLayer(nn.Module):
         # self.sigmoid_deg = cfg.attn.get("sigmoid_deg", False)
         self.deg_scaler = cfg.attn.get("deg_scaler", True)
 
-        self.attention = MultiHeadAttentionLayerGritSparse(
-            in_dim=in_dim,
-            out_dim=out_dim // num_heads,
-            num_heads=num_heads,
-            use_bias=cfg.attn.get("use_bias", False),
-            dropout=attn_dropout,
-            clamp=cfg.attn.get("clamp", 5.),
-            act=cfg.attn.get("act", "relu"),
-            edge_enhance=cfg.attn.get("edge_enhance", True),
-            sqrt_relu=cfg.attn.get("sqrt_relu", False),
-            signed_sqrt=cfg.attn.get("signed_sqrt", False),
-            scaled_attn =cfg.attn.get("scaled_attn", False),
-            no_qk=cfg.attn.get("no_qk", False),
-        )
-        # self.attention = GRITSparseConv(
-        #     in_channels= in_dim,
-        #     out_channels= out_dim // num_heads,
-        #     heads= num_heads,
-        #     concat=False,
-        #     beta = False,
-        #     dropout= 0.,
-        #     clamp= 5.0,
-        # )
+        if self.sparse:
+            self.attention = GRITSparseConv(
+                in_channels=in_dim,
+                out_channels=out_dim // num_heads,
+                heads=num_heads,
+                edge_dim=out_dim,
+                concat=False,
+                beta=False,
+                dropout=dropout,
+                clamp=5.0,
+            )
+        else:
+            self.attention = MultiHeadAttentionLayerGritSparse(
+                in_dim=in_dim,
+                out_dim=out_dim // num_heads,
+                num_heads=num_heads,
+                use_bias=cfg.attn.get("use_bias", False),
+                dropout=attn_dropout,
+                clamp=cfg.attn.get("clamp", 5.),
+                act=cfg.attn.get("act", "relu"),
+                edge_enhance=cfg.attn.get("edge_enhance", True),
+                sqrt_relu=cfg.attn.get("sqrt_relu", False),
+                signed_sqrt=cfg.attn.get("signed_sqrt", False),
+                scaled_attn=cfg.attn.get("scaled_attn", False),
+                no_qk=cfg.attn.get("no_qk", False),
+            )
 
         if cfg.attn.get('graphormer_attn', False):
             self.attention = MultiHeadAttentionLayerGraphormerSparse(
@@ -235,7 +242,7 @@ class GritTransformerLayer(nn.Module):
         # -------- Deg Scaler Option ------
 
         if self.deg_scaler:
-            self.deg_coef = nn.Parameter(torch.zeros(1, out_dim//num_heads * num_heads, 2))
+            self.deg_coef = nn.Parameter(torch.zeros(1, out_dim//num_heads * num_heads , 2))
             nn.init.xavier_normal_(self.deg_coef)
 
         if self.layer_norm:
@@ -272,8 +279,11 @@ class GritTransformerLayer(nn.Module):
         e = None
         # multi-head attention out
 
-        h_attn_out, e_attn_out = self.attention(batch)
-        # h_attn_out, e_attn_out = self.attention(batch.x, batch.edge_index, batch.edge_attr)
+        if self.sparse:
+            h_attn_out, e_attn_out = self.attention(batch.x, batch.edge_index, batch.edge_attr)
+        else:
+            h_attn_out, e_attn_out = self.attention(batch)
+
 
         h = h_attn_out.view(num_nodes, -1)
         h = F.dropout(h, self.dropout, training=self.training)

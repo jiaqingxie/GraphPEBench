@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:geforce_rtx_3090:1
 #SBATCH --exclude=tikgpu10
-#SBATCH --nodelist=tikgpu06
+#SBATCH --nodelist=tikgpu07
 #CommentSBATCH --account=tik-internal
 #CommentSBATCH --constraint='titan_rtx|tesla_v100|titan_xp|a100_80gb'
 
@@ -50,7 +50,7 @@ cd ${DIRECTORY}
 
 # Execute your code
 
-python main.py --cfg configs/GT/0_bench/GraphGPS/cluster/cluster-GPS-ESLapPE.yaml  wandb.use True accelerator "cuda:0" seed 42
+python main.py --cfg configs/GT/0_bench/GRIT/cifar10/cifar10-GRIT-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 0
 # Send more noteworthy information to the output log
 echo "Finished at: $(date)"
 

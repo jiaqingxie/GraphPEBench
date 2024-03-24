@@ -98,6 +98,7 @@ class GritTransformer(torch.nn.Module):
                 out_dim=cfg.gt.dim_hidden,
                 num_heads=cfg.gt.n_heads,
                 dropout=cfg.gt.dropout,
+                sparse=cfg.gt.sparse,
                 act=cfg.gnn.act,
                 attn_dropout=cfg.gt.attn_dropout,
                 layer_norm=cfg.gt.layer_norm,

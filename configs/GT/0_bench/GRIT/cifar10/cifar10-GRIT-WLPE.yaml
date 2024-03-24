@@ -6,14 +6,14 @@ num_workers: 4
 mlflow:
   use: False
   project: Exp
-  name: cifar10-GRIT-RRWP
+  name: cifar10-GRIT-WLPE
 wandb:
   use: True
   project: "PEGT"
-  name: "CIFAR10-GRIT-RRWP"
+  name: "CIFAR10-GRIT-WLPE"
   entity: jiaqing
 dataset:
-  pe_transform_on_the_fly: True
+  pe_transform_on_the_fly: False
   format: PyG-GNNBenchmarkDataset
   name: CIFAR10
   task: graph

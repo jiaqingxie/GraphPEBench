@@ -17,7 +17,7 @@ from torch_geometric.typing import (
     SparseTensor,
 )
 from torch_geometric.utils import softmax
-
+import torch.nn as nn
 if typing.TYPE_CHECKING:
     from typing import overload
 else:
@@ -83,20 +83,35 @@ class GRITSparseConv(MessagePassing):
             in_channels = (in_channels, in_channels)
 
         self.lin_key = Linear(in_channels[0], heads * out_channels)
-        self.lin_query = Linear(in_channels[1], heads * out_channels)
+        self.lin_query = Linear(in_channels[1], heads * out_channels, bias = True)
         self.lin_value = Linear(in_channels[0], heads * out_channels)
+
+        nn.init.xavier_normal_(self.lin_key.weight)
+        nn.init.xavier_normal_(self.lin_query.weight)
+        nn.init.xavier_normal_(self.lin_value.weight)
+
         if edge_dim is not None:
-            self.lin_edge_1 = Linear(edge_dim, heads * out_channels, bias=False)
-            self.lin_edge_2 = Linear(edge_dim, heads * out_channels, bias=False)
+            self.lin_edge_1 = Linear(edge_dim, heads * out_channels, bias=True)
+            self.lin_edge_2 = Linear(edge_dim, heads * out_channels, bias=True)
+
+
 
         else:
             self.lin_edge_1 = self.register_parameter('lin_edge_1', None)
             self.lin_edge_2 = self.register_parameter('lin_edge_2', None)
 
+        nn.init.xavier_normal_(self.lin_edge_1.weight)
+        nn.init.xavier_normal_(self.lin_edge_2.weight)
+
         self.W_A = torch.nn.Parameter(torch.zeros(out_channels, self.heads, 1), requires_grad=True)
         self.W_EV = torch.nn.Parameter(torch.zeros(out_channels, self.heads, 1), requires_grad=True)
 
-        self.reset_parameters()
+        nn.init.xavier_normal_(self.W_A)
+        nn.init.xavier_normal_(self.W_EV)
+
+
+
+        # self.reset_parameters()
 
     def reset_parameters(self):
         # super().reset_parameters()
@@ -179,7 +194,7 @@ class GRITSparseConv(MessagePassing):
         if self.concat:
             out = out.view(-1, self.heads * self.out_channels)
         else:
-            out = out.mean(dim=1)
+            out = out.sum(dim=1)
 
         if isinstance(return_attention_weights, bool):
             assert alpha is not None
@@ -194,35 +209,32 @@ class GRITSparseConv(MessagePassing):
                 edge_attr: OptTensor, index: Tensor, ptr: OptTensor,
                 size_i: Optional[int]) -> Tensor:
 
-        score = 0
-        if self.lin_edge_1 is not None and self.lin_edge_2 is not None:
-            assert edge_attr is not None
-            # W_ew * e_ij
-            W_ew_eij = self.lin_edge_1(edge_attr).view(-1, self.heads,
-                                                       self.out_channels)
-            # W_eb * e_ij
-            W_eb_eij = self.lin_edge_2(edge_attr).view(-1, self.heads,
-                                                       self.out_channels)
 
-            # GRIT 1. update edge_attr
-            # e_ij_new = relu(\rho((query_i +key_j) * W_ew_eij) + W_eb_eij)
 
-            score = (query_i + key_j) * W_ew_eij
-            score = torch.sqrt(torch.relu(score)) - torch.sqrt(torch.relu(-score))
-            score = score + W_eb_eij
+        W_ew_eij = self.lin_edge_1(edge_attr).view(-1, self.heads,
+                                                   self.out_channels)
+        # W_eb * e_ij
+        W_eb_eij = self.lin_edge_2(edge_attr).view(-1, self.heads,
+                                                   self.out_channels)
+
+        # GRIT 1. update edge_attr
+        # e_ij_new = relu(\rho((query_i +key_j) * W_ew_eij) + W_eb_eij)
+
+        score = (query_i + key_j) * W_ew_eij
+        score = torch.sqrt(torch.relu(score)) - torch.sqrt(torch.relu(-score))
+        score = score + W_eb_eij
 
         score = self.act(score)
         edge_attr = score
-        self._alpha = edge_attr
+        self._alpha = edge_attr.flatten(1)
 
         score_1 = oe.contract("ehd, dhc->ehc", score, self.W_A, backend="torch")
         # score_1 = score
-        score_1 = softmax(score_1, index, ptr, size_i)
+
         if self.clamp is not None:
             score_1 = torch.clamp(score_1, min=-self.clamp, max=self.clamp)
-
+        score_1 = softmax(score_1, index, ptr, size_i)
         # 2. Sparse attention
-
         score_1 = F.dropout(score_1, p=self.dropout, training=self.training)
 
         score_2 = oe.contract("ehd, dhc->ehc", score, self.W_EV, backend="torch")
