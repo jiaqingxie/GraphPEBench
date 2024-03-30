@@ -20,17 +20,19 @@ dataset:
   task_type: classification
   transductive: False
   node_encoder: True
-  node_encoder_name: LinearNode
+  node_encoder_name: LinearNode+WLPE
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: LinearEdge
   edge_encoder_bn: False
-posenc_RRWP:
+posenc_WLPE:
+  add_self_loops: True
   enable: True
-  ksteps: 18
-  add_identity: True
-  add_node_attr: False
-  add_inverse: False
+  model: DeepSet
+  dh: 18 #( dim_pe + 60 = gt.dim_hidden (in below ) )
+  layers: 2
+  n_heads: 4  # Only used when `posenc.model: Transformer`
+  raw_norm_type: none
 train:
   mode: custom
   batch_size: 16

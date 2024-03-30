@@ -2,7 +2,7 @@ out_dir: results
 metric_best: accuracy
 tensorboard_each_run: True  # Log to Tensorboard each run
 accelerator: "cuda:0"
-repeat: 4
+num_workers: 4
 mlflow:
   use: False
   project: Exp
@@ -32,6 +32,12 @@ posenc_RWDIFF:
   layers: 2
   n_heads: 4  # Only used when `posenc.model: Transformer`
   raw_norm_type: none
+prep:
+  exp: True
+  use_exp_edges: False
+  exp_deg: 5 # Algorithm will use 5 permutations or 5 Hamiltonian cycles, so actual degree will be 10
+  add_edge_index: True # Set True if you want to add real edges beside expander edges
+  num_virt_node: 1 # Set True if you want to add global node connections beside expander edges
 train:
   mode: custom
   batch_size: 16
@@ -43,38 +49,22 @@ model:
   edge_decoding: dot
   graph_pooling: mean
 gt:
-  layer_type: Exphormer
-  layers: 4
+  layer_type: CustomGatedGCN+Exphormer # some other options: Exphormer, GINE+Exphormer, GINE, GINE__exp
+  layers: 5
   n_heads: 4
-  dim_hidden: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
-  dropout: 0.0
+  dim_hidden: 40  # `gt.dim_hidden` must match `gnn.dim_inner`
+  dropout: 0.1
+  attn_dropout: 0.1
   layer_norm: False
   batch_norm: True
-#  bn_momentum: 0.01
-  update_e: True
-  attn_dropout: 0.2
-  attn:
-    clamp: 5.
-    act: 'relu'
-    full_attn: True
-    edge_enhance: True
-    O_e: True
-    norm_e: True
-    fwl: False
-prep:
-  add_edge_index: True
-  num_virt_node: 0
-  use_exp_edges: False
-  exp: True
-  exp_deg: 5
 gnn:
   head: default
   layers_pre_mp: 0
-  layers_post_mp: 3
-  dim_inner: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
+  layers_post_mp: 2
+  dim_inner: 40  # `gt.dim_hidden` must match `gnn.dim_inner`
   batchnorm: False
   act: relu
-  dropout: 0.0
+  dropout: 0.1
   agg: mean
   normalize_adj: False
 optim:
