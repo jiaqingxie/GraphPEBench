@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import torch_geometric as pyg
 from torch_geometric.utils.num_nodes import maybe_num_nodes
 from torch_scatter import scatter, scatter_max, scatter_add
-
+from torch_geometric.utils import remove_self_loops, add_remaining_self_loops, add_self_loops
 from grit.utils import negate_edge_index
 from torch_geometric.graphgym.register import *
 import opt_einsum as oe
@@ -84,6 +84,7 @@ class MultiHeadAttentionLayerGritSparse(nn.Module):
             nn.init.xavier_normal_(self.VeRow)
 
     def propagate_attention(self, batch):
+
         src = batch.K_h[batch.edge_index[0]]      # (num relative) x num_heads x out_dim
         dest = batch.Q_h[batch.edge_index[1]]     # (num relative) x num_heads x out_dim
         score = src + dest                        # element-wise multiplication
@@ -109,18 +110,25 @@ class MultiHeadAttentionLayerGritSparse(nn.Module):
             score = torch.clamp(score, min=-self.clamp, max=self.clamp)
 
         raw_attn = score
+
         score = pyg_softmax(score, batch.edge_index[1])  # (num relative) x num_heads x 1
         score = self.dropout(score)
         batch.attn = score
 
         # Aggregate with Attn-Score
         msg = batch.V_h[batch.edge_index[0]] * score  # (num relative) x num_heads x out_dim
+
         batch.wV = torch.zeros_like(batch.V_h)  # (num nodes in batch) x num_heads x out_dim
         scatter(msg, batch.edge_index[1], dim=0, out=batch.wV, reduce='add')
+
+
+
 
         if self.edge_enhance and batch.E is not None:
             rowV = scatter(e_t * score, batch.edge_index[1], dim=0, reduce="add")
             rowV = oe.contract("nhd, dhc -> nhc", rowV, self.VeRow, backend="torch")
+
+
             batch.wV = batch.wV + rowV
 
     def forward(self, batch):
@@ -194,9 +202,9 @@ class GritTransformerLayer(nn.Module):
                 out_channels=out_dim // num_heads,
                 heads=num_heads,
                 edge_dim=out_dim,
-                concat=False,
+                concat=True,
                 beta=False,
-                dropout=dropout,
+                dropout=attn_dropout,
                 clamp=5.0,
             )
         else:
@@ -270,6 +278,7 @@ class GritTransformerLayer(nn.Module):
             self.alpha1_e = nn.Parameter(torch.zeros(1,1))
 
     def forward(self, batch):
+
         h = batch.x
         num_nodes = batch.num_nodes
         log_deg = get_log_deg(batch)

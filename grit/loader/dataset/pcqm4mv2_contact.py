@@ -291,7 +291,8 @@ class PygPCQM4Mv2ContactDataset(InMemoryDataset):
         self.smiles2graph = smiles2graph
         self.folder = osp.join(root, 'pcqm4m-v2-contact', subset)
 
-        self.url = 'https://datasets-public-research.s3.us-east-2.amazonaws.com/PCQM4M/pcqm4m-contact.tsv.gz'
+        # self.url = 'https://datasets-public-research.s3.us-east-2.amazonaws.com/PCQM4M/pcqm4m-contact.tsv.gz'
+        self.url = 'https://www.dropbox.com/s/qdag867u6h6i60y/pcqmcontact.zip?dl=1'
         self.version = 'f7ffb27942145a2e72f6f5f51716d3bc'  # MD5 hash of the intended dataset file
 
         if subset == 'full':
@@ -309,11 +310,11 @@ class PygPCQM4Mv2ContactDataset(InMemoryDataset):
         self.generate_splits = False
 
         # Check version and update if necessary.
-        release_tag = osp.join(self.folder, self.version)
-        if osp.isdir(self.folder) and (not osp.exists(release_tag)):
-            print(f"{self.__class__.__name__} has been updated.")
-            if input("Will you update the dataset now? (y/N)\n").lower() == 'y':
-                shutil.rmtree(self.folder)
+        # release_tag = osp.join(self.folder, self.version)
+        # if osp.isdir(self.folder) and (not osp.exists(release_tag)):
+        #     print(f"{self.__class__.__name__} has been updated.")
+        #     if input("Will you update the dataset now? (y/N)\n").lower() == 'y':
+        #         shutil.rmtree(self.folder)
 
         super().__init__(self.folder, transform, pre_transform)
         self.data, self.slices = torch.load(self.processed_paths[0])
@@ -333,27 +334,27 @@ class PygPCQM4Mv2ContactDataset(InMemoryDataset):
             hash_md5.update(buffer)
         return hash_md5.hexdigest()
 
-    def download(self):
-        if decide_download(self.url):
-            path = ogb_download_url(self.url, self.raw_dir)
-            # Save to disk the MD5 hash of the downloaded file.
-            hash = self._md5sum(path)
-            if hash != self.version:
-                raise ValueError("Unexpected MD5 hash of the downloaded file")
-            open(osp.join(self.root, hash), 'w').close()
-            # Download train/val/test splits.
-            try:
-                path_split1 = download_url(self.url_shuffle_split, self.folder)
-                assert self._md5sum(path_split1) == self.md5_shuffle_split
-                path_split2 = download_url(self.url_numatoms_split, self.folder)
-                assert self._md5sum(path_split2) == self.md5_numatoms_split
-            except Exception as e:
-                print(f"Exception while downloading dataset splits: {e}")
-                print(f"...splits will be regenerated.")
-                self.generate_splits = True
-        else:
-            print('Stop download.')
-            exit(-1)
+    # def download(self):
+    #     if decide_download(self.url):
+    #         path = ogb_download_url(self.url, self.raw_dir)
+    #         # Save to disk the MD5 hash of the downloaded file.
+    #         hash = self._md5sum(path)
+    #         if hash != self.version:
+    #             raise ValueError("Unexpected MD5 hash of the downloaded file")
+    #         open(osp.join(self.root, hash), 'w').close()
+    #         # Download train/val/test splits.
+    #         try:
+    #             path_split1 = download_url(self.url_shuffle_split, self.folder)
+    #             assert self._md5sum(path_split1) == self.md5_shuffle_split
+    #             path_split2 = download_url(self.url_numatoms_split, self.folder)
+    #             assert self._md5sum(path_split2) == self.md5_numatoms_split
+    #         except Exception as e:
+    #             print(f"Exception while downloading dataset splits: {e}")
+    #             print(f"...splits will be regenerated.")
+    #             self.generate_splits = True
+    #     else:
+    #         print('Stop download.')
+    #         exit(-1)
 
     def _process_smiles(self, smiles):
         """ Construct PyG graph data object with contact edges from a CXSMILES.

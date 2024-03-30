@@ -9,7 +9,7 @@ from torch_scatter import scatter
 from yacs.config import CfgNode
 import hashlib
 from torch_geometric.utils import to_dense_adj
-
+from torch_geometric.utils import  add_self_loops
 
 def negate_edge_index(edge_index, batch=None):
     """Negate batched sparse adjacency matrices given by edge indices.
@@ -151,9 +151,13 @@ def wl_positional_encoding(g):
         Zhang, Jiawei and Zhang, Haopeng and Xia, Congying and Sun, Li, 2020
         https://github.com/jwzhanggy/Graph-Bert
     """
+    g.edge_index, g.edge_attr = add_self_loops(g.edge_index, g.edge_attr, num_nodes=g.num_nodes,
+                                                       fill_value=0.)
+    # Keep PE separate in a variable
     max_iter = 2
     node_color_dict = {}
     node_neighbor_dict = {}
+
 
     edge_list = g.edge_index.t().numpy()
     node_list = torch.unique(g.edge_index).numpy()

@@ -10,6 +10,7 @@ from torch_geometric.graphgym.register import register_node_encoder
 from torch_geometric.nn import GINConv
 from torch_scatter import scatter
 
+from torch_geometric.utils import remove_self_loops, add_remaining_self_loops, add_self_loops
 
 class MLP(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels, num_layers,
@@ -210,6 +211,7 @@ class SignNetNodeEncoder(torch.nn.Module):
             raise ValueError(f"Num layers in rho model has to be positive.")
         max_freqs = pecfg.eigen.max_freqs  # Num. eigenvectors (frequencies)
         self.pass_as_var = pecfg.pass_as_var  # Pass PE also as a separate variable
+        self.add_selfloops = pecfg.add_self_loops
 
         if dim_emb - dim_pe < 1:
             raise ValueError(f"SignNet PE size {dim_pe} is too large for "
@@ -273,6 +275,9 @@ class SignNetNodeEncoder(torch.nn.Module):
         # Concatenate final PEs to input embedding
         batch.x = torch.cat((h, pos_enc), 1)
         # Keep PE also separate in a variable (e.g. for skip connections to input)
+        if self.add_selfloops:
+            batch.edge_index, batch.edge_attr = add_self_loops(batch.edge_index, batch.edge_attr, num_nodes=batch.num_nodes, fill_value=0.)
+
         if self.pass_as_var:
             batch.pe_SignNet = pos_enc
         return batch

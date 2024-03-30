@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch_geometric.graphgym.config import cfg
 from torch_geometric.graphgym.register import register_node_encoder
-
+from torch_geometric.utils import  add_self_loops
 
 class KernelPENodeEncoder(torch.nn.Module):
     """Configurable kernel-based Positional Encoding node encoder.
@@ -34,6 +34,7 @@ class KernelPENodeEncoder(torch.nn.Module):
         dim_in = cfg.share.dim_in  # Expected original input node features dim
 
         pecfg = getattr(cfg, f"posenc_{self.kernel_type}")
+        self.add_selfloops = pecfg.add_self_loops
         dim_pe = pecfg.dim_pe  # Size of the kernel-based PE embedding
         num_rw_steps = len(pecfg.kernel.times)
         model_type = pecfg.model.lower()  # Encoder NN model type for PEs
@@ -96,6 +97,8 @@ class KernelPENodeEncoder(torch.nn.Module):
             h = batch.x
         # Concatenate final PEs to input embedding
         batch.x = torch.cat((h, pos_enc), 1)
+        if self.add_selfloops:
+            batch.edge_index, batch.edge_attr = add_self_loops(batch.edge_index, batch.edge_attr, num_nodes=batch.num_nodes, fill_value=0.)
         # Keep PE also separate in a variable (e.g. for skip connections to input)
         if self.pass_as_var:
             setattr(batch, f'pe_{self.kernel_type}', pos_enc)

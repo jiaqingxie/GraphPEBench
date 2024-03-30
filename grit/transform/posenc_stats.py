@@ -34,6 +34,20 @@ class DisableLogging:
         logging.getLogger().setLevel(self.original_level)
 
 
+def append_cols_to_match(U, max_freqs):
+    # U is your matrix, and max_freqs is the target number of columns.
+    num_cols_to_add = max_freqs - U.shape[1]
+
+    if num_cols_to_add > 0:
+        # Create a matrix of zeros with the same number of rows as U and num_cols_to_add columns.
+        zeros_matrix = np.zeros((U.shape[0], num_cols_to_add), dtype=np.float32)
+
+        # Concatenate U and zeros_matrix along the column axis.
+        U = np.hstack((U, zeros_matrix))
+
+    return U
+
+    return U
 def positional_embedding(wl_pos_enc, d_h):
     """Calcuate the pos_enc for each node with vanilla positional encoding in original Transformer model
     wl_pos_enc: wl-based positional encoding
@@ -162,7 +176,9 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
         ppr_matrix = np.zeros((n, n))
         ppr_matrix = personalized_page_rank(edge_index = undir_edge_index, indices = np.arange(n))
         U, Sigma, VT = np.linalg.svd(ppr_matrix.cpu(), full_matrices = True)
-        data.pos_enc = U[:, :cfg.posenc_PPR.eigen.max_freqs]
+
+
+        data.pos_enc = append_cols_to_match(U[:, :cfg.posenc_PPR.eigen.max_freqs], cfg.posenc_PPR.eigen.max_freqs)
         # print(data.pos_enc.shape)
 
     if 'NODE2VEC' in pe_types:

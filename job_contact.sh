@@ -50,7 +50,7 @@ cd ${DIRECTORY}
 
 # Execute your code
 
-python main.py --cfg configs/GT/0_bench/GRITSparseConv/cluster/cluster-GRITSparse-GCKN.yaml  wandb.use True accelerator "cuda:0" seed 2024
+python main.py --cfg configs/GT/0_bench/GraphGPS/LRGB/pcqm_contact/pcqm-contact-GPS-ESLapPE.yaml  wandb.use True accelerator "cuda:0" seed 0
 echo "Finished at: $(date)"
 
 # End the script with exit code 0

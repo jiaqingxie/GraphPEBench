@@ -4,6 +4,7 @@ import torch_geometric.graphgym.register as register
 from torch_geometric.graphgym.config import cfg
 from torch_geometric.graphgym.register import register_node_encoder
 import time
+from torch_geometric.utils import add_self_loops
 
 
 
@@ -22,6 +23,7 @@ class GCKNNodeEncoder(torch.nn.Module):
 
         pecfg = cfg.posenc_GCKN
         dim_pe = pecfg.dim_pe  # Size of Laplace PE embedding
+        self.add_selfloops = pecfg.add_self_loops
         model_type = pecfg.model  # Encoder NN model type for PEs
         # print(model_type)
         if model_type not in ['Transformer', 'DeepSet']:
@@ -141,6 +143,8 @@ class GCKNNodeEncoder(torch.nn.Module):
         # Concatenate final PEs to input embedding
         batch.x = torch.cat((h, pos_enc), 1)
         # Keep PE also separate in a variable (e.g. for skip connections to input)
+        if self.add_selfloops:
+            batch.edge_index, batch.edge_attr = add_self_loops(batch.edge_index, batch.edge_attr, num_nodes=batch.num_nodes, fill_value=0.)
         if self.pass_as_var:
             batch.pos_enc = pos_enc
         return batch

@@ -26,6 +26,7 @@ def full_edge_index(edge_index, batch=None):
     Args:
         edge_index: The edge indices.
         batch: Batch vector, which assigns each node to a specific example.
+        batch: Batch vector, which assigns each node to a specific example.
     Returns:
         Complementary edge index.
     """

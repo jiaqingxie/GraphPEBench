@@ -6,7 +6,7 @@ from torch_geometric.graphgym.register import register_node_encoder
 from torch_ppr import page_rank, personalized_page_rank
 from tqdm import tqdm
 import time
-
+from torch_geometric.utils import  add_self_loops
 @register_node_encoder('PPR')
 class PPRNodeEncoder(torch.nn.Module):
     """Personalized PageRank embeddings
@@ -35,6 +35,7 @@ class PPRNodeEncoder(torch.nn.Module):
         if expand_x:
             self.linear_encoder = nn.Linear(max_freqs, dim_emb - dim_in)
 
+        self.add_selfloops = pecfg.add_self_loops
 
     def forward(self, batch):
         # n = batch.num_nodes
@@ -60,6 +61,8 @@ class PPRNodeEncoder(torch.nn.Module):
 
 
         batch.x = torch.cat((h, pos_enc), 1)
+        if self.add_selfloops:
+            batch.edge_index, batch.edge_attr = add_self_loops(batch.edge_index, batch.edge_attr, num_nodes=batch.num_nodes, fill_value=0.)
         # Keep PE separate in a variable
         batch.pos_enc = pos_enc
         return batch

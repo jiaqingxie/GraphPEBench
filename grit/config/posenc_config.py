@@ -32,6 +32,7 @@ def set_cfg_posenc(cfg):
         pecfg = getattr(cfg, name)
         # Use extended positional encodings
         pecfg.enable = False
+        pecfg.add_self_loops = False
 
         # Neural-net model type within the PE encoder:
         # 'DeepSet', 'Transformer', 'Linear', 'none', ...

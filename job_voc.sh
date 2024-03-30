@@ -4,9 +4,9 @@
 #SBATCH --error=/itet-stor/jiaxie/net_scratch/pe4gt/jobs/%j.err # where to store error messages
 #SBATCH --mem=20G
 #SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:rtx_a6000:8
+#SBATCH --gres=gpu:geforce_rtx_3090:1
 #SBATCH --exclude=tikgpu10
-#SBATCH --nodelist=tikgpu08
+#SBATCH --nodelist=tikgpu06
 #CommentSBATCH --account=tik-internal
 #CommentSBATCH --constraint='titan_rtx|tesla_v100|titan_xp|a100_80gb'
 
@@ -49,17 +49,8 @@ echo "Conda activated"
 cd ${DIRECTORY}
 
 # Execute your code
-python main.py --cfg configs/GT/0_bench/Exphormer/mnist/mnist-Exphormer-ESLapPE.yaml wandb.use True accelerator "cuda:0" seed 0 &
-python main.py --cfg configs/GT/0_bench/Exphormer/mnist/mnist-Exphormer-ESLapPE.yaml wandb.use True accelerator "cuda:1" seed 1 &
-python main.py --cfg configs/GT/0_bench/Exphormer/mnist/mnist-Exphormer-ESLapPE.yaml wandb.use True accelerator "cuda:2" seed 2 &
-python main.py --cfg configs/GT/0_bench/Exphormer/mnist/mnist-Exphormer-ESLapPE.yaml wandb.use True accelerator "cuda:3" seed 3 &
-python main.py --cfg configs/GT/0_bench/Exphormer/mnist/mnist-Exphormer-PPR.yaml wandb.use True accelerator "cuda:4" seed 0 &
-python main.py --cfg configs/GT/0_bench/Exphormer/mnist/mnist-Exphormer-PPR.yaml wandb.use True accelerator "cuda:5" seed 1 &
-python main.py --cfg configs/GT/0_bench/Exphormer/mnist/mnist-Exphormer-PPR.yaml wandb.use True accelerator "cuda:6" seed 2 &
-python main.py --cfg configs/GT/0_bench/Exphormer/mnist/mnist-Exphormer-PPR.yaml wandb.use True accelerator "cuda:7" seed 3 &
 
-wait
-# Send more noteworthy information to the output log
+python main.py --cfg configs/GT/0_bench/GraphGPS/LRGB/VOC/voc-GPS-ESLapPE.yaml  wandb.use True accelerator "cuda:0" seed 0
 echo "Finished at: $(date)"
 
 # End the script with exit code 0
