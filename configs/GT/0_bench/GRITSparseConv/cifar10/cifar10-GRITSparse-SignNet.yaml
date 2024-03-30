@@ -7,11 +7,11 @@ num_workers: 4
 mlflow:
   use: False
   project: Exp
-  name: CIFAR10-GPS-GCKN
+  name: CIFAR10-GRITSparse-SignNet
 wandb:
   use: True
   project: "PEGT"
-  name: "CIFAR10-GPS-GCKN"
+  name: "CIFAR10-GRITSparse-SignNet"
   entity: jiaqing
 dataset:
   pe_transform_on_the_fly: False # compute PE on the fly to save memory when launching many experiments in parallel
@@ -21,25 +21,26 @@ dataset:
   task_type: classification
   transductive: False
   node_encoder: True
-  node_encoder_name: LinearNode+GCKN
+  node_encoder_name: LinearNode+SignNet
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: LinearEdge
   edge_encoder_bn: False
-posenc_GCKN:
-  enable: True
-  normalization: None
-  beta: 1 # 0.5 for method "pRWSE"
-  method: "diffusion"
-  use_edge_attr: False
+posenc_SignNet:
+  add_self_loops: False
+  dim_pe: 18
   eigen:
-    laplacian_norm: none
     eigvec_norm: L2
-    max_freqs: 8
-  model: DeepSet
-  dim_pe: 8
+    laplacian_norm: sym
+    max_freqs: 18
+  enable: True
   layers: 4
-  n_heads: 4  # Only used when `posenc.model: Transformer`
+  model: MLP
+  n_heads: 4
+  pass_as_var: false
+  phi_hidden_dim: 40
+  phi_out_dim: 4
+  post_layers: 2
   raw_norm_type: none
 train:
   mode: custom
@@ -47,19 +48,28 @@ train:
   eval_period: 1
   ckpt_period: 100
 model:
-  type: GPSModel
+  type: GritTransformer
   loss_fun: cross_entropy
   edge_decoding: dot
   graph_pooling: mean
 gt:  # Hyperparameters optimized for ~100k budget.
-  layer_type: CustomGatedGCN+Transformer
+  layer_type: GritTransformer
   layers: 3
   n_heads: 4
   dim_hidden: 52  # `gt.dim_hidden` must match `gnn.dim_inner`
   dropout: 0.0
-  attn_dropout: 0.5
+  attn_dropout: 0.2
   layer_norm: False
   batch_norm: True
+  sparse: True
+  update_e: True
+  attn:
+    clamp: 5.
+    act: 'relu'
+    full_attn: True
+    edge_enhance: True
+    O_e: True
+    norm_e: True
 gnn:
   head: default
   layers_pre_mp: 0
