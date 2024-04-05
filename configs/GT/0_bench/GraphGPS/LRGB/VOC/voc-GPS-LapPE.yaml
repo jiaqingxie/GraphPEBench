@@ -3,7 +3,7 @@ metric_best: f1
 wandb:
   use: True
   project: "PEGT"
-  name: "Pascal-VOC-GPS-ESLapPE"
+  name: "Pascal-VOC-GPS-LapPE"
   entity: jiaqing
 dataset:
   format: PyG-VOCSuperpixels
@@ -13,12 +13,12 @@ dataset:
   task_type: classification
   transductive: False
   node_encoder: True
-  node_encoder_name: VOCNode+EquivStableLapPE
+  node_encoder_name: VOCNode+LapPE
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: VOCEdge
   edge_encoder_bn: False
-posenc_EquivStableLapPE:
+posenc_LapPE:
   enable: True
   eigen:
     laplacian_norm: none

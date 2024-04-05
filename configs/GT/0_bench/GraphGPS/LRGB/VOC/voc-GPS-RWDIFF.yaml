@@ -1,9 +1,10 @@
 out_dir: results
 metric_best: f1
+num_workers: 4
 wandb:
   use: True
   project: "PEGT"
-  name: "Pascal-VOC-GPS-ESLapPE"
+  name: "Pascal-VOC-GPS-RWDIFF"
   entity: jiaqing
 dataset:
   format: PyG-VOCSuperpixels
@@ -13,20 +14,17 @@ dataset:
   task_type: classification
   transductive: False
   node_encoder: True
-  node_encoder_name: VOCNode+EquivStableLapPE
+  node_encoder_name: VOCNode+RWDIFF
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: VOCEdge
   edge_encoder_bn: False
-posenc_EquivStableLapPE:
+posenc_RWDIFF:
   enable: True
-  eigen:
-    laplacian_norm: none
-    eigvec_norm: L2
-    max_freqs: 10
   model: DeepSet
   dim_pe: 16
   layers: 2
+  n_heads: 4  # Only used when `posenc.model: Transformer`
   raw_norm_type: none
 train:
   mode: custom

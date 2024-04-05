@@ -15,7 +15,7 @@ from yacs.config import CfgNode as CN
 import warnings
 
 from .GRITSparseConv import GRITSparseConv
-
+from torch_geometric.nn.conv import GINEConv, GINConv
 def pyg_softmax(src, index, num_nodes=None):
     r"""Computes a sparsely evaluated softmax.
     Given a value tensor :attr:`src`, this function first groups the values
@@ -196,6 +196,16 @@ class GritTransformerLayer(nn.Module):
         # self.sigmoid_deg = cfg.attn.get("sigmoid_deg", False)
         self.deg_scaler = cfg.attn.get("deg_scaler", True)
 
+        self.mlp = torch.nn.Sequential(
+            torch.nn.Linear(in_dim, out_dim),
+            torch.nn.ReLU(),
+            torch.nn.Linear(out_dim, out_dim)
+        )
+        self.gine = cfg.gine
+        # Initialize the GINEConv layer
+        self.gine_conv = GINEConv(self.mlp)
+        self.gin_conv = GINConv(self.mlp)
+
         if self.sparse:
             self.attention = GRITSparseConv(
                 in_channels=in_dim,
@@ -222,6 +232,9 @@ class GritTransformerLayer(nn.Module):
                 scaled_attn=cfg.attn.get("scaled_attn", False),
                 no_qk=cfg.attn.get("no_qk", False),
             )
+
+        if self.gine:
+            self.attention = self.gine_conv
 
         if cfg.attn.get('graphormer_attn', False):
             self.attention = MultiHeadAttentionLayerGraphormerSparse(
@@ -288,7 +301,13 @@ class GritTransformerLayer(nn.Module):
         e = None
         # multi-head attention out
 
-        if self.sparse:
+        if self.gine:
+            # if batch.edge_attr is not None:
+            h_attn_out = self.attention(batch.x, batch.edge_index, batch.edge_attr)
+            # else:
+            #     h_attn_out = self.gin_conv(batch.x, batch.edge_index)
+            e_attn_out = None
+        elif self.sparse:
             h_attn_out, e_attn_out = self.attention(batch.x, batch.edge_index, batch.edge_attr)
         else:
             h_attn_out, e_attn_out = self.attention(batch)

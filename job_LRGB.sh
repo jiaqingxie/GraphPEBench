@@ -50,7 +50,7 @@ cd ${DIRECTORY}
 
 # Execute your code
 
-python main.py --cfg configs/GT/0_bench/GraphGPS/LRGB/peptides_struct/peptides-struct-GPS-LapPE.yaml  wandb.use True accelerator "cuda:0" seed 2024
+python main.py --cfg configs/GT/0_bench/GraphGPS/LRGB/VOC/voc-GPS-RWDIFF.yaml  wandb.use True accelerator "cuda:0" seed 2024
 echo "Finished at: $(date)"
 
 # End the script with exit code 0

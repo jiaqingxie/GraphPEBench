@@ -50,7 +50,7 @@ cd ${DIRECTORY}
 
 # Execute your code
 
-python main.py --cfg configs/GT/0_bench/GINEGRIT/mnist/mnist-GINE-GCKN.yaml  wandb.use True accelerator "cuda:0" seed 42
+python main.py --cfg configs/GT/0_bench/GraphGPS/cluster/cluster-GPS-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 2024
 echo "Finished at: $(date)"
 
 # End the script with exit code 0

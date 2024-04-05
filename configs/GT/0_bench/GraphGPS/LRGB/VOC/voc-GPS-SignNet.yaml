@@ -1,9 +1,10 @@
 out_dir: results
 metric_best: f1
+num_workers: 4
 wandb:
   use: True
   project: "PEGT"
-  name: "Pascal-VOC-GPS-ESLapPE"
+  name: "Pascal-VOC-GPS-SignNet"
   entity: jiaqing
 dataset:
   format: PyG-VOCSuperpixels
@@ -13,20 +14,25 @@ dataset:
   task_type: classification
   transductive: False
   node_encoder: True
-  node_encoder_name: VOCNode+EquivStableLapPE
+  node_encoder_name: VOCNode+SignNet
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: VOCEdge
   edge_encoder_bn: False
-posenc_EquivStableLapPE:
-  enable: True
-  eigen:
-    laplacian_norm: none
-    eigvec_norm: L2
-    max_freqs: 10
-  model: DeepSet
+posenc_SignNet:
   dim_pe: 16
-  layers: 2
+  eigen:
+    eigvec_norm: L2
+    laplacian_norm: sym
+    max_freqs: 10
+  enable: True
+  layers: 4
+  model: MLP
+  n_heads: 4
+  pass_as_var: false
+  phi_hidden_dim: 68
+  phi_out_dim: 4
+  post_layers: 2
   raw_norm_type: none
 train:
   mode: custom
