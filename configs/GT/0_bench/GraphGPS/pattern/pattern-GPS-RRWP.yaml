@@ -1,65 +1,68 @@
 out_dir: results
-metric_best: accuracy
-tensorboard_each_run: True  # Log to Tensorboard each run
-accelerator: "cuda:0"
-repeat: 4
-mlflow:
-  use: False
-  project: Exp
-  name: mnist-GPS-RRWP
+metric_best: accuracy-SBM
 wandb:
   use: True
   project: "PEGT"
-  name: "MNIST-GPS-RRWP"
+  name: "PATTERN-GPS-RRWP"
   entity: jiaqing
 dataset:
-  pe_transform_on_the_fly: True # compute PE on the fly to save memory when launching many experiments in parallel
+  pe_transform_on_the_fly: True
   format: PyG-GNNBenchmarkDataset
-  name: MNIST
+  name: PATTERN
   task: graph
   task_type: classification
   transductive: False
+  split_mode: standard
   node_encoder: True
   node_encoder_name: LinearNode
   node_encoder_bn: False
   edge_encoder: True
-  edge_encoder_name: LinearEdge
+  edge_encoder_name: DummyEdge
   edge_encoder_bn: False
 posenc_RRWP:
   enable: True
-  ksteps: 8
+  ksteps: 10
   add_identity: True
   add_node_attr: False
   add_inverse: False
 train:
   mode: custom
-  batch_size: 16
+  batch_size: 32
   eval_period: 1
   ckpt_period: 100
 model:
   type: GPSModel
-  loss_fun: cross_entropy
+  loss_fun: weighted_cross_entropy
   edge_decoding: dot
-  graph_pooling: mean
-gt:  # Hyperparameters optimized for ~100k budget.
+gt:  # Hyperparameters optimized for up to ~500k budget.
   layer_type: CustomGatedGCN+Transformer
-  layers: 3
+  layers: 6
   n_heads: 4
-  dim_hidden: 52  # `gt.dim_hidden` must match `gnn.dim_inner`
+  dim_hidden: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
   dropout: 0.0
   attn_dropout: 0.5
   layer_norm: False
   batch_norm: True
 gnn:
-  head: default
+  head: inductive_node
   layers_pre_mp: 0
   layers_post_mp: 3
-  dim_inner: 52  # `gt.dim_hidden` must match `gnn.dim_inner`
-  batchnorm: False
+  dim_inner: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
+  batchnorm: True
   act: relu
   dropout: 0.0
   agg: mean
   normalize_adj: False
+#optim:
+#  clip_grad_norm: True
+#  optimizer: adamW
+#  weight_decay: 0.0
+#  base_lr: 0.0005
+#  max_epoch: 1000
+#  scheduler: reduce_on_plateau
+#  reduce_factor: 0.5
+#  schedule_patience: 10
+#  min_lr: 1e-5
 optim:
   clip_grad_norm: True
   optimizer: adamW

@@ -201,7 +201,7 @@ class GritTransformerLayer(nn.Module):
             torch.nn.ReLU(),
             torch.nn.Linear(out_dim, out_dim)
         )
-        self.gine = cfg.gine
+        self.gine = cfg.get("gine", None)
         # Initialize the GINEConv layer
         self.gine_conv = GINEConv(self.mlp)
         self.gin_conv = GINConv(self.mlp)
@@ -304,6 +304,7 @@ class GritTransformerLayer(nn.Module):
         if self.gine:
             # if batch.edge_attr is not None:
             h_attn_out = self.attention(batch.x, batch.edge_index, batch.edge_attr)
+            # h_attn_out = self.gin_conv(batch.x, batch.edge_index)
             # else:
             #     h_attn_out = self.gin_conv(batch.x, batch.edge_index)
             e_attn_out = None
@@ -320,7 +321,7 @@ class GritTransformerLayer(nn.Module):
         if self.deg_scaler:
             h = torch.stack([h, h * log_deg], dim=-1)
             h = (h * self.deg_coef).sum(dim=-1)
-        
+
         
 
         h = self.O_h(h)

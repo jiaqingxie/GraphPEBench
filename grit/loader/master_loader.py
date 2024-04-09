@@ -3,6 +3,8 @@ import os.path as osp
 import time
 import warnings
 from functools import partial
+from ..transform.expander_edges import generate_random_expander
+
 
 import numpy as np
 import torch
@@ -195,6 +197,7 @@ def load_dataset_master(format, name, dataset_dir):
                              f"{pecfg.kernel.times}")
 
 
+
     if pe_enabled_list:
         start = time.perf_counter()
         logging.info(f"Precomputing Positional Encoding statistics: "
@@ -228,6 +231,25 @@ def load_dataset_master(format, name, dataset_dir):
                 dataset.transform = pe_transform
             else:
                 dataset.transform = T.compose([pe_transform, dataset.transform])
+
+    expand = cfg.prep.get("exp", False)
+    if expand:
+        for j in range(cfg.prep.exp_count):
+            start = time.perf_counter()
+            logging.info(f"Adding expander edges (round {j}) ...")
+            pre_transform_in_memory(dataset,
+                                    partial(generate_random_expander,
+                                            degree=cfg.prep.exp_deg,
+                                            algorithm=cfg.prep.exp_algorithm,
+                                            rng=None,
+                                            max_num_iters=cfg.prep.exp_max_num_iters,
+                                            exp_index=j),
+                                    show_progress=True
+                                    )
+            elapsed = time.perf_counter() - start
+            timestr = time.strftime('%H:%M:%S', time.gmtime(elapsed)) \
+                      + f'{elapsed:.2f}'[-3:]
+            logging.info(f"Done! Took {timestr}")
 
     if name == 'ogbn-arxiv' or name == 'ogbn-proteins':
         return dataset

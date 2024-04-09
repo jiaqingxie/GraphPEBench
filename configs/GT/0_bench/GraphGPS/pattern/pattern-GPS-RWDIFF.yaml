@@ -1,19 +1,11 @@
 out_dir: results
 metric_best: accuracy-SBM
-tensorboard_each_run: True  # Log to Tensorboard each run
-accelerator: "cuda:0"
-num_workers: 4
-#mlflow:
-#  use: False
-#  project: Exp
-#  name: pattern-GINE-RRWP
 wandb:
   use: True
   project: "PEGT"
-  name: "PATTERN-GINEGRIT-RRWP"
+  name: "PATTERN-GPS-RWDIFF"
   entity: jiaqing
 dataset:
-  pe_transform_on_the_fly: True
   format: PyG-GNNBenchmarkDataset
   name: PATTERN
   task: graph
@@ -21,47 +13,37 @@ dataset:
   transductive: False
   split_mode: standard
   node_encoder: True
-  node_encoder_name: LinearNode
+  node_encoder_name: LinearNode+RWDIFF
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: DummyEdge
   edge_encoder_bn: False
-posenc_RRWP:
+posenc_RWDIFF:
   enable: True
-  ksteps: 21
-  add_identity: True
-  add_node_attr: False
+  model: DeepSet
+  dim_pe: 10
+  layers: 2
+  n_heads: 4  # Only used when `posenc.model: Transformer`
+  raw_norm_type: none
 train:
   mode: custom
   batch_size: 32
   eval_period: 1
   ckpt_period: 100
 model:
-  type: GritTransformer
+  type: GPSModel
   loss_fun: weighted_cross_entropy
   edge_decoding: dot
 gt:  # Hyperparameters optimized for up to ~500k budget.
-  layer_type: GritTransformer
-  layers: 10
-  n_heads: 8
-  dim_hidden: 64 # `gt.dim_hidden` must match `gnn.dim_inner`
+  layer_type: CustomGatedGCN+Transformer
+  layers: 6
+  n_heads: 4
+  dim_hidden: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
   dropout: 0.0
-  attn_dropout: 0.2
+  attn_dropout: 0.5
   layer_norm: False
   batch_norm: True
-  update_e: False
-  gine: True
-  sparse: True # Will be replaced by gineconv, so dont worry about this
-  attn:
-    clamp: 5.
-    act: 'relu'
-    full_attn: True
-    edge_enhance: True
-    O_e: True
-    norm_e: True
-    fwl: False
 gnn:
-  dim_edge: 64
   head: inductive_node
   layers_pre_mp: 0
   layers_post_mp: 3
@@ -71,11 +53,21 @@ gnn:
   dropout: 0.0
   agg: mean
   normalize_adj: False
+#optim:
+#  clip_grad_norm: True
+#  optimizer: adamW
+#  weight_decay: 0.0
+#  base_lr: 0.0005
+#  max_epoch: 1000
+#  scheduler: reduce_on_plateau
+#  reduce_factor: 0.5
+#  schedule_patience: 10
+#  min_lr: 1e-5
 optim:
   clip_grad_norm: True
   optimizer: adamW
   weight_decay: 1e-5
-  base_lr: 0.0005
+  base_lr: 0.001
   max_epoch: 100
   scheduler: cosine_with_warmup
   num_warmup_epochs: 5

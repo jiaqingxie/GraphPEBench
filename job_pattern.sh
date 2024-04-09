@@ -50,7 +50,9 @@ cd ${DIRECTORY}
 
 # Execute your code
 
-python main.py --cfg configs/GT/0_bench/GINEGRIT/cifar10/cifar10-GINE-RWDIFF.yaml  wandb.use True accelerator "cuda:0" seed 2024
+python main.py --cfg configs/GT/0_bench/GRITSparseConv/pattern/pattern-GRITSparse-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 2024
+#python main.py --cfg configs/GT/0_bench/GraphGPS/pattern/pattern-GPS-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 7
+
 echo "Finished at: $(date)"
 
 # End the script with exit code 0
