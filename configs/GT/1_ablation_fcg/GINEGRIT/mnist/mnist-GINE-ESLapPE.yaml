@@ -7,6 +7,7 @@ num_workers: 4
 #  use: False
 #  project: Exp
 #  name: mnist-GRIT-ESLapPE
+pad_to_full_graph: True
 wandb:
   use: True
   project: "PEGT"
@@ -26,7 +27,6 @@ dataset:
   edge_encoder_name: LinearEdge
   edge_encoder_bn: False
 posenc_EquivStableLapPE:
-
   enable: True
   eigen:
     laplacian_norm: none
