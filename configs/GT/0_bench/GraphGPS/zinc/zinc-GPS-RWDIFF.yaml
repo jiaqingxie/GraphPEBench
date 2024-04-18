@@ -4,13 +4,16 @@ metric_best: mae
 metric_agg: argmin
 tensorboard_each_run: True  # Log to Tensorboard each run
 accelerator: "cuda:0"
+num_workers: 4
 mlflow:
   use: False
   project: Exp
-  name: zinc-GRIT-RRWP
+  name: zinc-GPS-RWDIFF
 wandb:
-  use: False
-  project: ZINC
+  use: True
+  project: "PEGT"
+  name: "ZINC-GraphGPS-RWDIFF"
+  entity: jiaqing
 dataset:
   format: PyG-ZINC
   name: subset
@@ -28,7 +31,7 @@ dataset:
 posenc_RWDIFF:
   enable: True
   model: DeepSet
-  dim_pe: 4 #( dim_pe + 60 = gt.dim_hidden (in below ) )
+  dim_pe: 10
   layers: 2
   n_heads: 4  # Only used when `posenc.model: Transformer`
   raw_norm_type: none
@@ -41,18 +44,28 @@ train:
   ckpt_clean: True # Delete old ckpt each time.
 model:
   type: GPSModel
-  loss_fun: cross_entropy
+  loss_fun: l1
   edge_decoding: dot
-  graph_pooling: mean
+  graph_pooling: add
 gt:
-  layer_type: GINE+Transformer  # CustomGatedGCN+Performer
+  layer_type: GINE+Transformer
   layers: 10
   n_heads: 4
   dim_hidden: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
   dropout: 0.0
-  attn_dropout: 0.5
   layer_norm: False
   batch_norm: True
+#  bn_momentum: 0.01
+  update_e: True
+  attn_dropout: 0.5
+  attn:
+    clamp: 5.
+    act: 'relu'
+    full_attn: True
+    edge_enhance: True
+    O_e: True
+    norm_e: True
+    fwl: False
 gnn: # decoder --> san_graph = MLP + pooling
   head: san_graph
   layers_pre_mp: 0
@@ -68,7 +81,7 @@ optim:
   optimizer: adamW
   weight_decay: 1e-5
   base_lr: 1e-3
-  max_epoch: 2000
+  max_epoch: 1500
   num_warmup_epochs: 50
   scheduler: cosine_with_warmup
   min_lr: 1e-6

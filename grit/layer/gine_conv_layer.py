@@ -32,7 +32,7 @@ class GINEConvESLapPE(pyg_nn.conv.MessagePassing):
             self.lin = pyg_nn.Linear(edge_dim, in_channels)
         else:
             self.lin = None
-        self.reset_parameters()
+
 
         if hasattr(self.nn[0], 'in_features'):
             out_dim = self.nn[0].out_features
@@ -46,6 +46,7 @@ class GINEConvESLapPE(pyg_nn.conv.MessagePassing):
             torch.nn.Linear(out_dim, 1),
             torch.nn.Sigmoid())
 
+        self.reset_parameters()
     def reset_parameters(self):
         pyg_nn.inits.reset(self.nn)
         self.eps.data.fill_(self.initial_eps)
@@ -69,6 +70,7 @@ class GINEConvESLapPE(pyg_nn.conv.MessagePassing):
 
     def message(self, x_j, edge_attr, PE_i, PE_j):
         if self.lin is None and x_j.size(-1) != edge_attr.size(-1):
+
             raise ValueError("Node and edge feature dimensionalities do not "
                              "match. Consider setting the 'edge_dim' "
                              "attribute of 'GINEConv'")

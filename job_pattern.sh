@@ -50,7 +50,7 @@ cd ${DIRECTORY}
 
 # Execute your code
 
-python main.py --cfg configs/GT/0_bench/GRITSparseConv/pattern/pattern-GRITSparse-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 2024
+python main.py --cfg configs/GT/0_bench/Exphormer/pattern/pattern-Exphormer-COREGD.yaml  wandb.use True accelerator "cuda:0" seed 2024
 #python main.py --cfg configs/GT/0_bench/GraphGPS/pattern/pattern-GPS-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 7
 
 echo "Finished at: $(date)"

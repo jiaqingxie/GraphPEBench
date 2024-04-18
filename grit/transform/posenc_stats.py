@@ -8,7 +8,7 @@ import numpy as np
 
 import torch
 import torch.nn.functional as F
-from numpy.linalg import eigvals
+# from numpy.linalg import eigvals
 from torch_geometric.utils import (get_laplacian, to_scipy_sparse_matrix,
                                    to_undirected, to_dense_adj, degree)
 from torch_geometric.utils.num_nodes import maybe_num_nodes
@@ -17,9 +17,9 @@ from torch_scatter import scatter_add
 from functools import partial
 from .rrwp import add_full_rrwp
 from torch_ppr import page_rank, personalized_page_rank
-from node2vec import Node2Vec
-import networkx as nx
-from torch_geometric.utils import to_networkx
+# from node2vec import Node2Vec
+# import networkx as nx
+# from torch_geometric.utils import to_networkx
 from torch_geometric.utils import to_undirected, remove_self_loops, add_self_loops
 
 from ..utils import wl_positional_encoding, adj_mul
@@ -96,7 +96,7 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
     for t in pe_types:
         if t not in ['LapPE', 'EquivStableLapPE', 'SignNet',
                      'RWSE', 'HKdiagSE', 'HKfullPE', 'ElstaticSE','RRWP',
-                     'SVD', 'PPR', 'NODE2VEC', 'WLPE', 'GCKN', 'RWDIFF']:
+                     'SVD', 'PPR', 'WLPE', 'GCKN', 'RWDIFF', 'GD']:
             raise ValueError(f"Unexpected PE stats selection {t} in {pe_types}")
 
     # Basic preprocessing of the input graph.
@@ -181,24 +181,24 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
         data.pos_enc = append_cols_to_match(U[:, :cfg.posenc_PPR.eigen.max_freqs], cfg.posenc_PPR.eigen.max_freqs)
         # print(data.pos_enc.shape)
 
-    if 'NODE2VEC' in pe_types:
-        # print("Dealing with node2vec embeddings ...")
-        G = to_networkx(data, to_undirected=True)
-        node2vec = Node2Vec(G, dimensions=cfg.posenc_NODE2VEC.node2vec.dimensions,
-                               walk_length=cfg.posenc_NODE2VEC.node2vec.walk_length,
-                               num_walks=cfg.posenc_NODE2VEC.node2vec.num_walks,
-                               workers=cfg.posenc_NODE2VEC.node2vec.workers,
-                               quiet=True)
-        with DisableLogging():
-            model = node2vec.fit(window=cfg.posenc_NODE2VEC.node2vec.window,
-                             min_count=cfg.posenc_NODE2VEC.node2vec.min_count,
-                             batch_words=cfg.posenc_NODE2VEC.node2vec.batch_words,
-
-                             )
-
-        embeddings = {str(node): model.wv[str(node)] for node in G.nodes()}
-        embedding_list = [embeddings[str(node)] for node in sorted(G.nodes(), key=lambda x: str(x))]
-        data.pos_enc = np.vstack(embedding_list)
+    # if 'NODE2VEC' in pe_types:
+    #     # print("Dealing with node2vec embeddings ...")
+    #     G = to_networkx(data, to_undirected=True)
+    #     node2vec = Node2Vec(G, dimensions=cfg.posenc_NODE2VEC.node2vec.dimensions,
+    #                            walk_length=cfg.posenc_NODE2VEC.node2vec.walk_length,
+    #                            num_walks=cfg.posenc_NODE2VEC.node2vec.num_walks,
+    #                            workers=cfg.posenc_NODE2VEC.node2vec.workers,
+    #                            quiet=True)
+    #     with DisableLogging():
+    #         model = node2vec.fit(window=cfg.posenc_NODE2VEC.node2vec.window,
+    #                          min_count=cfg.posenc_NODE2VEC.node2vec.min_count,
+    #                          batch_words=cfg.posenc_NODE2VEC.node2vec.batch_words,
+    #
+    #                          )
+    #
+    #     embeddings = {str(node): model.wv[str(node)] for node in G.nodes()}
+    #     embedding_list = [embeddings[str(node)] for node in sorted(G.nodes(), key=lambda x: str(x))]
+    #     data.pos_enc = np.vstack(embedding_list)
 
     if 'WLPE' in pe_types:
         data.pos_enc = positional_embedding(wl_positional_encoding(data),
@@ -215,7 +215,8 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
         RW = A.dot(Dinv)
         M = RW
         # Iterate
-        nb_pos_enc = cfg.posenc_RWDIFF.pos_enc_dim
+        # nb_pos_enc = cfg.posenc_RWDIFF.pos_enc_dim
+        nb_pos_enc = cfg.posenc_RWDIFF.dim_pe
         PE = [torch.from_numpy(M.diagonal()).float()]
         M_power = M
         for _ in range(nb_pos_enc - 1):

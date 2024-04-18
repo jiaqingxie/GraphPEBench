@@ -4,13 +4,12 @@ metric_best: mae
 metric_agg: argmin
 tensorboard_each_run: True  # Log to Tensorboard each run
 accelerator: "cuda:0"
-mlflow:
-  use: False
-  project: Exp
-  name: zinc-GRIT-RRWP
+num_workers: 4
 wandb:
-  use: False
-  project: ZINC
+  use: True
+  project: "PEGT"
+  name: "ZINC-GRITSparse-ESLapPE"
+  entity: jiaqing
 dataset:
   format: PyG-ZINC
   name: subset
@@ -18,31 +17,19 @@ dataset:
   task_type: regression
   transductive: False
   node_encoder: True
-  node_encoder_name: TypeDictNode+NODE2VEC
+  node_encoder_name: TypeDictNode+EquivStableLapPE
   node_encoder_num_types: 21 # actually 21 in Zinc-12k, 28 in Zinc-full
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: TypeDictEdge
   edge_encoder_num_types: 4
   edge_encoder_bn: False
-posenc_NODE2VEC:
+posenc_EquivStableLapPE:
   enable: True
-  node2vec:
-    dimensions: 4
-    walk_length: 4
-    num_walks: 10
-    workers: 4
-    window: 10
-    min_count: 1
-    batch_words: 4
   eigen:
     laplacian_norm: none
     eigvec_norm: L2
-    max_freqs: 4
-  model: DeepSet
-  dim_pe: 4
-  layers: 2
-  n_heads: 4  # Only used when `posenc.model: Transformer`
+    max_freqs: 21
   raw_norm_type: none
 train:
   mode: custom
@@ -65,6 +52,7 @@ gt:
   layer_norm: False
   batch_norm: True
 #  bn_momentum: 0.01
+  sparse: True
   update_e: True
   attn_dropout: 0.2
   attn:
@@ -90,7 +78,7 @@ optim:
   optimizer: adamW
   weight_decay: 1e-5
   base_lr: 1e-3
-  max_epoch: 2000
+  max_epoch: 1500
   num_warmup_epochs: 50
   scheduler: cosine_with_warmup
   min_lr: 1e-6

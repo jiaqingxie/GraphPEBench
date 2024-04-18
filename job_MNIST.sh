@@ -50,7 +50,7 @@ cd ${DIRECTORY}
 
 # Execute your code
 
-python main.py --cfg configs/GT/1_ablation_fcg/GINEGRIT/mnist/mnist-GINE-ESLapPE.yaml  wandb.use True accelerator "cuda:0" seed 0
+python main.py --cfg configs/GT/0_bench/Exphormer/mnist/mnist-Exphormer-COREGD.yaml  wandb.use True accelerator "cuda:0" seed 2024
 echo "Finished at: $(date)"
 
 # End the script with exit code 0

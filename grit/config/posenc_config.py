@@ -17,17 +17,17 @@ def set_cfg_posenc(cfg):
     cfg.posenc_RRWP = CN()
     cfg.posenc_SVD = CN()
     cfg.posenc_PPR = CN()
-    cfg.posenc_NODE2VEC = CN()
     cfg.posenc_WLPE = CN()
     cfg.posenc_GCKN = CN()
     cfg.posenc_RWDIFF = CN()
+    cfg.posenc_GD = CN()
 
     # Common arguments to all PE types.
     for name in ['posenc_LapPE', 'posenc_SignNet',
                  'posenc_RWSE', 'posenc_HKdiagSE', 'posenc_ElstaticSE',
                  'posenc_RRWP', 'posenc_SVD', 'posenc_PPR',
-                 'posenc_NODE2VEC', 'posenc_WLPE', 'posenc_GCKN',
-                 'posenc_RWDIFF',
+                 'posenc_WLPE', 'posenc_GCKN',
+                 'posenc_RWDIFF', 'posenc_GD'
                  ]:
         pecfg = getattr(cfg, name)
         # Use extended positional encodings
@@ -63,23 +63,24 @@ def set_cfg_posenc(cfg):
 
         pecfg.pos_enc_dim = 10
 
-    if name == 'posenc_NODE2VEC':
-
-        pecfg = getattr(cfg, name)
-
-        pecfg.node2vec.dimensions = 64
-
-        pecfg.node2vec.walk_length = 30
-
-        pecfg.node2vec.num_walks = 200
-
-        pecfg.node2vec.workers=4
-
-        pecfg.node2vec.window = 10
-
-        pecfg.node2vec.min_count = 1
-
-        pecfg.node2vec.batch_words = 4
+        pecfg.dim_pe = 10
+    # if name == 'posenc_NODE2VEC':
+    #
+    #     pecfg = getattr(cfg, name)
+    #
+    #     pecfg.node2vec.dimensions = 64
+    #
+    #     pecfg.node2vec.walk_length = 30
+    #
+    #     pecfg.node2vec.num_walks = 200
+    #
+    #     pecfg.node2vec.workers=4
+    #
+    #     pecfg.node2vec.window = 10
+    #
+    #     pecfg.node2vec.min_count = 1
+    #
+    #     pecfg.node2vec.batch_words = 4
 
     if name == 'posenc_WLPE':
         pecfg = getattr(cfg, name)
@@ -107,7 +108,7 @@ def set_cfg_posenc(cfg):
 
     # Config for Laplacian Eigen-decomposition for PEs that use it.
     for name in ['posenc_LapPE', 'posenc_SignNet', 'posenc_EquivStableLapPE',
-            'posenc_SVD', 'posenc_PPR', 'posenc_NODE2VEC', 'posenc_WLPE',
+            'posenc_SVD', 'posenc_PPR', 'posenc_WLPE',
             'posenc_GCKN']:
         pecfg = getattr(cfg, name)
         pecfg.eigen = CN()

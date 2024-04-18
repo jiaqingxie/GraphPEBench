@@ -8,7 +8,7 @@ repeat: 4
 mlflow:
   use: False
   project: Exp
-  name: zinc-GraphGPS-ESLapPE
+  name: zinc-GraphGPS-GCKN
 wandb:
   use: True
   project: "PEGT"
@@ -61,7 +61,7 @@ model:
   loss_fun: l1
   graph_pooling: mean
 gt:
-  layer_type: Exphormer
+  layer_type: CustomGatedGCN+Exphormer
   layers: 4
   n_heads: 4
   dim_hidden: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
@@ -84,7 +84,7 @@ optim:
   optimizer: adamW
   weight_decay: 1e-5
   base_lr: 1e-3
-  max_epoch: 2000
+  max_epoch: 1500
   num_warmup_epochs: 50
   scheduler: cosine_with_warmup
   min_lr: 1e-6

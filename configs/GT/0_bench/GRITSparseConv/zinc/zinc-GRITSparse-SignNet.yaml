@@ -4,13 +4,12 @@ metric_best: mae
 metric_agg: argmin
 tensorboard_each_run: True  # Log to Tensorboard each run
 accelerator: "cuda:0"
-mlflow:
-  use: False
-  project: Exp
-  name: zinc-GRIT-RRWP
+num_workers: 4
 wandb:
-  use: False
-  project: ZINC
+  use: True
+  project: "PEGT"
+  name: "ZINC-GRITSparse-SignNet"
+  entity: jiaqing
 dataset:
   format: PyG-ZINC
   name: subset
@@ -18,27 +17,27 @@ dataset:
   task_type: regression
   transductive: False
   node_encoder: True
-  node_encoder_name: TypeDictNode+GCKN
+  node_encoder_name: TypeDictNode+SignNet
   node_encoder_num_types: 21 # actually 21 in Zinc-12k, 28 in Zinc-full
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: TypeDictEdge
   edge_encoder_num_types: 4
   edge_encoder_bn: False
-posenc_GCKN:
-  enable: True
-  normalization: None
-  beta: 1 # 0.5 for method "pRWSE"
-  method: "diffusion"
-  use_edge_attr: False
+posenc_SignNet:
+  dim_pe: 21
   eigen:
-    laplacian_norm: none
     eigvec_norm: L2
-    max_freqs: 4
-  model: DeepSet
-  dim_pe: 4
-  layers: 2
-  n_heads: 4  # Only used when `posenc.model: Transformer`
+    laplacian_norm: sym
+    max_freqs: 10
+  enable: True
+  layers: 4
+  model: MLP
+  n_heads: 4
+  pass_as_var: false
+  phi_hidden_dim: 64
+  phi_out_dim: 4
+  post_layers: 2
   raw_norm_type: none
 train:
   mode: custom
@@ -61,6 +60,7 @@ gt:
   layer_norm: False
   batch_norm: True
 #  bn_momentum: 0.01
+  sparse: True
   update_e: True
   attn_dropout: 0.2
   attn:
@@ -86,7 +86,7 @@ optim:
   optimizer: adamW
   weight_decay: 1e-5
   base_lr: 1e-3
-  max_epoch: 2000
+  max_epoch: 1500
   num_warmup_epochs: 50
   scheduler: cosine_with_warmup
   min_lr: 1e-6

@@ -18,13 +18,15 @@ class RWDIFFNodeEncoder(torch.nn.Module):
         norm_type = pecfg.raw_norm_type.lower()  # Raw PE normalization layer type
         self.add_selfloops = pecfg.add_self_loops
         if norm_type == 'batchnorm':
-            self.raw_norm = nn.BatchNorm1d(cfg.posenc_RWDIFF.pos_enc_dim)
+            # self.raw_norm = nn.BatchNorm1d(cfg.posenc_RWDIFF.pos_enc_dim)
+            self.raw_norm = nn.BatchNorm1d(cfg.posenc_RWDIFF.dim_pe)
         else:
             self.raw_norm = None
 
         self.expand_x = expand_x
         self.dim_emb = pecfg.dim_pe
-        self.linear_encoder = nn.Linear(cfg.posenc_RWDIFF.pos_enc_dim, self.dim_emb)
+        # self.linear_encoder = nn.Linear(cfg.posenc_RWDIFF.pos_enc_dim, self.dim_emb)
+        self.linear_encoder = nn.Linear(cfg.posenc_RWDIFF.dim_pe, self.dim_emb)
 
     def forward(self, batch):
 

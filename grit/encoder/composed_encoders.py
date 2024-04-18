@@ -15,10 +15,11 @@ from grit.encoder.voc_superpixels_encoder import VOCNodeEncoder
 from grit.encoder.type_dict_encoder import TypeDictNodeEncoder
 from grit.encoder.linear_node_encoder import LinearNodeEncoder
 from grit.encoder.equivstable_laplace_pos_encoder import EquivStableLapPENodeEncoder
-from grit.encoder.node2vec_pos_encoder import NODE2VECNodeEncoder
+# from grit.encoder.node2vec_pos_encoder import NODE2VECNodeEncoder
 from grit.encoder.wlpe_pos_encoder import WLPENodeEncoder
 from grit.encoder.gckn_pos_encoder import GCKNNodeEncoder
 from grit.encoder.rwdiff_pos_encoder import RWDIFFNodeEncoder
+from grit.encoder.gd_encoder import GDNodeEncoder
 
 def concat_node_encoders(encoder_classes, pe_enc_names):
     """
@@ -120,10 +121,11 @@ pe_encs = {'LapPE': LapPENodeEncoder,
            'EquivStableLapPE': EquivStableLapPENodeEncoder,
            'SVD': SVDNodeEncoder,
            'PPR': PPRNodeEncoder,
-           'NODE2VEC': NODE2VECNodeEncoder,
+           # 'NODE2VEC': NODE2VECNodeEncoder,
            'WLPE': WLPENodeEncoder,
            'GCKN': GCKNNodeEncoder, # Kernel Traning 1) Diffusion 2) P-step Random Walk
            'RWDIFF':RWDIFFNodeEncoder, # Random Diffusion
+           'GD': GDNodeEncoder,
            }
 
 # Concat dataset-specific and PE encoders.

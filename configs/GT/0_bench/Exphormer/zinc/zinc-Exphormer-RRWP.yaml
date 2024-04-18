@@ -3,7 +3,7 @@ out_dir: results
 metric_best: mae
 metric_agg: argmin
 tensorboard_each_run: True  # Log to Tensorboard each run
-ccelerator: "cuda:0"
+accelerator: "cuda:0"
 repeat: 4
 mlflow:
   use: False
@@ -36,7 +36,7 @@ prep:
   exp_deg: 5
 posenc_RRWP:
   enable: True
-  ksteps: 21
+  ksteps: 8
   add_identity: True
   add_node_attr: False
   add_inverse: False
@@ -53,7 +53,7 @@ model:
   edge_decoding: dot
   graph_pooling: add
 gt:
-  layer_type: Exphormer
+  layer_type: CustomGatedGCN+Exphormer
   layers: 4
   n_heads: 4
   dim_hidden: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
@@ -76,7 +76,7 @@ optim:
   optimizer: adamW
   weight_decay: 1e-5
   base_lr: 1e-3
-  max_epoch: 2000
+  max_epoch: 1500
   num_warmup_epochs: 50
   scheduler: cosine_with_warmup
   min_lr: 1e-6
