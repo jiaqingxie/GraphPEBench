@@ -50,7 +50,7 @@ cd ${DIRECTORY}
 
 # Execute your code
 
-python main.py --cfg configs/GT/0_bench/GINEGRIT/cifar10/cifar10-GINE-RWDIFF.yaml  wandb.use True accelerator "cuda:0" seed 2024
+python main.py --cfg configs/GT/0_bench/Exphormer/cifar10/cifar10-Exphormer-COREGD.yaml  wandb.use True accelerator "cuda:0" seed 2024
 echo "Finished at: $(date)"
 
 # End the script with exit code 0
