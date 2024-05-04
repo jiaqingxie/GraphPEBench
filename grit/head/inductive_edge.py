@@ -85,7 +85,17 @@ class GNNInductiveEdgeHead(nn.Module):
                 neg_mask[torch.arange(num_pos_edges), pos_edge_index[1]] = False
                 pred_neg = pred[pos_edge_index[0]][neg_mask].view(num_pos_edges, -1)
                 # print(pred_neg, pred_neg.shape)
-                mrr_list = self._eval_mrr(pred_pos, pred_neg, 'torch')
+                mrr_list = self._eval_mrr(pred_pos, pred_neg, 'torch', suffix='')
+
+                # filtered MRR
+                pred_masked = pred.clone()
+                pred_masked[pos_edge_index[0], pos_edge_index[1]] -= float("inf")
+                pred_neg = pred_masked[pos_edge_index[0]]
+                mrr_list.update(self._eval_mrr(pred_pos, pred_neg, 'torch', suffix='_filt'))
+
+                pred_masked[torch.arange(data.num_nodes), torch.arange(data.num_nodes)] -= float("inf")
+                pred_neg = pred_masked[pos_edge_index[0]]
+                mrr_list.update(self._eval_mrr(pred_pos, pred_neg, 'torch', suffix='_filt_self'))
             else:
                 # Return empty stats.
                 mrr_list = self._eval_mrr(pred_pos, pred_pos, 'torch')
@@ -112,7 +122,7 @@ class GNNInductiveEdgeHead(nn.Module):
             # print(f"{key}: {mean_val}")
         return batch_stats
 
-    def _eval_mrr(self, y_pred_pos, y_pred_neg, type_info):
+    def _eval_mrr(self, y_pred_pos, y_pred_neg, type_info, suffix=''):
         """ Compute Hits@k and Mean Reciprocal Rank (MRR).
 
         Implementation from OGB:
@@ -133,11 +143,10 @@ class GNNInductiveEdgeHead(nn.Module):
             hits10_list = (ranking_list <= 10).to(torch.float)
             mrr_list = 1. / ranking_list.to(torch.float)
 
-            return {'hits@1_list': hits1_list,
-                    'hits@3_list': hits3_list,
-                    'hits@10_list': hits10_list,
-                    'mrr_list': mrr_list}
-
+            return {f'hits@1{suffix}_list': hits1_list,
+                    f'hits@3{suffix}_list': hits3_list,
+                    f'hits@10{suffix}_list': hits10_list,
+                    f'mrr{suffix}_list': mrr_list}
         else:
             y_pred = np.concatenate([y_pred_pos.reshape(-1, 1), y_pred_neg],
                                     axis=1)

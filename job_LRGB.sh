@@ -2,7 +2,7 @@
 #SBATCH --mail-type=NONE # mail configuration: NONE, BEGIN, END, FAIL, REQUEUE, ALL
 #SBATCH --output=/itet-stor/jiaxie/net_scratch/pe4gt/jobs/%j.out # where to store the output (%j is the JOBID), subdirectory "jobs" must exist
 #SBATCH --error=/itet-stor/jiaxie/net_scratch/pe4gt/jobs/%j.err # where to store error messages
-#SBATCH --mem=20G
+#SBATCH --mem=40G
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:geforce_rtx_3090:1
 #SBATCH --exclude=tikgpu10
@@ -50,7 +50,7 @@ cd ${DIRECTORY}
 
 # Execute your code
 
-python main.py --cfg configs/GT/0_bench/GraphGPS/LRGB/VOC/voc-GPS-RWDIFF.yaml  wandb.use True accelerator "cuda:0" seed 2024
+python main.py --cfg configs/GT/0_bench/GraphGPS/LRGB/pcqm_contact/pcqm-contact-GPS-RWSE.yaml  wandb.use True accelerator "cuda:0" seed 0
 echo "Finished at: $(date)"
 
 # End the script with exit code 0

@@ -35,13 +35,13 @@ posenc_SignNet:
   model: MLP
   n_heads: 4
   pass_as_var: false
-  phi_hidden_dim: 96
+  phi_hidden_dim: 76
   phi_out_dim: 4
   post_layers: 2
   raw_norm_type: none
 train:
   mode: custom
-  batch_size: 128
+  batch_size: 200
   eval_period: 1
   ckpt_period: 100
 model:
@@ -50,27 +50,29 @@ model:
   graph_pooling: mean
 gt:
   layer_type: CustomGatedGCN+Transformer
-  layers: 4
+  layers: 6
   n_heads: 4
-  dim_hidden: 96  # `gt.dim_hidden` must match `gnn.dim_inner`
-  dropout: 0.0
+  dim_hidden: 76  # `gt.dim_hidden` must match `gnn.dim_inner`
+  dropout: 0.1
   attn_dropout: 0.5
   layer_norm: False
   batch_norm: True
 gnn:
-  head: default
+  head:  mlp_graph
   layers_pre_mp: 0
-  layers_post_mp: 1  # Not used when `gnn.head: san_graph`
-  dim_inner: 96  # `gt.dim_hidden` must match `gnn.dim_inner`
+  layers_post_mp: 2  # Not used when `gnn.head: san_graph`
+  dim_inner: 76  # `gt.dim_hidden` must match `gnn.dim_inner`
   batchnorm: True
-  act: relu
-  dropout: 0.0
+  act: gelu
+  dropout: 0.1
+  agg: mean
+  normalize_adj: False
 optim:
   clip_grad_norm: True
   optimizer: adamW
   weight_decay: 0.0
-  base_lr: 0.0003
-  max_epoch: 200
+  base_lr: 0.001
+  max_epoch: 250
   scheduler: cosine_with_warmup
-  num_warmup_epochs: 10
+  num_warmup_epochs: 5
 

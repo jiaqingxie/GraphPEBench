@@ -259,6 +259,19 @@ def custom_train(loggers, loaders, model, optimizer, scheduler):
                         for x in ['hits@1', 'hits@3', 'hits@10', 'mrr']:
                             if x in perf[i][best_epoch]:
                                 bstats[f"best/{s}_{x}"] = perf[i][best_epoch][x]
+                        for x in ['hits@1_filt', 'hits@3_filt', 'hits@10_filt', 'mrr_filt']:
+                            if x in perf[i][best_epoch]:
+                                bstats[f"best/{s}_{x}"] = perf[i][best_epoch][x]
+                        for x in ['hits@1_filt_self', 'hits@3_filt_self', 'hits@10_filt_self', 'mrr_filt_self']:
+                            if x in perf[i][best_epoch]:
+                                bstats[f"best/{s}_{x}"] = perf[i][best_epoch][x]
+                        for x in ['dirichlet', 'mad', 'emb_norm']:
+                            if x in perf[i][best_epoch]:
+                                bstats[f"best/{s}_{x}"] = perf[i][best_epoch][x]
+
+                        for x in ['hits@1', 'hits@3', 'hits@10', 'mrr']:
+                            if x in perf[i][best_epoch]:
+                                bstats[f"best/{s}_{x}"] = perf[i][best_epoch][x]
                     if cfg.wandb.use:
                         run.log(bstats, step=cur_epoch)
                         run.summary["full_epoch_time_avg"] = np.mean(full_epoch_times)

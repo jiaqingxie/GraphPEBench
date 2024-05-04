@@ -16,6 +16,7 @@ from torch_geometric.graphgym.register import (
 from torch_geometric.utils import remove_self_loops, add_remaining_self_loops, add_self_loops
 from torch_scatter import scatter
 import warnings
+from torch_geometric.graphgym.config import cfg
 
 def full_edge_index(edge_index, batch=None):
     """
