@@ -3,14 +3,15 @@ metric_best: accuracy
 tensorboard_each_run: True  # Log to Tensorboard each run
 accelerator: "cuda:0"
 num_workers: 4
+pad_to_full_graph: True
 mlflow:
   use: False
   project: Exp
-  name: mnist-GRITSparse-SignNet
+  name: mnist-GRIT-RWDIFF
 wandb:
   use: True
   project: "PEGT"
-  name: "MNIST-GRITSparse-SignNet"
+  name: "MNIST-GRIT-RWDIFF"
   entity: jiaqing
 dataset:
   pe_transform_on_the_fly: False # compute PE on the fly to save memory when launching many experiments in parallel
@@ -20,25 +21,17 @@ dataset:
   task_type: classification
   transductive: False
   node_encoder: True
-  node_encoder_name: LinearNode+SignNet
+  node_encoder_name: LinearNode+RWDIFF
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: LinearEdge
   edge_encoder_bn: False
-posenc_SignNet:
-  dim_pe: 18
-  eigen:
-    eigvec_norm: L2
-    laplacian_norm: sym
-    max_freqs: 10
+posenc_RWDIFF:
   enable: True
-  layers: 4
-  model: MLP
-  n_heads: 4
-  pass_as_var: false
-  phi_hidden_dim: 64
-  phi_out_dim: 4
-  post_layers: 2
+  model: DeepSet
+  dim_pe: 18 #( dim_pe + 60 = gt.dim_hidden (in below ) )
+  layers: 2
+  n_heads: 4  # Only used when `posenc.model: Transformer`
   raw_norm_type: none
 train:
   mode: custom
@@ -59,7 +52,7 @@ gt:  # Hyperparameters optimized for ~100k budget.
   attn_dropout: 0.5
   layer_norm: False
   batch_norm: True
-  sparse: True
+  sparse: False
   update_e: True
   attn:
     clamp: 5.
