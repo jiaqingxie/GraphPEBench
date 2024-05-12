@@ -28,7 +28,7 @@ dataset:
   edge_encoder_bn: False
 posenc_EquivStableLapPE:
   add_self_loops: True
-  enable: True
+  enable: False
   eigen:
     laplacian_norm: none
     eigvec_norm: L2

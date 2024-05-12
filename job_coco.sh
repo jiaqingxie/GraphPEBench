@@ -2,11 +2,10 @@
 #SBATCH --mail-type=NONE # mail configuration: NONE, BEGIN, END, FAIL, REQUEUE, ALL
 #SBATCH --output=/itet-stor/jiaxie/net_scratch/pe4gt/jobs/%j.out # where to store the output (%j is the JOBID), subdirectory "jobs" must exist
 #SBATCH --error=/itet-stor/jiaxie/net_scratch/pe4gt/jobs/%j.err # where to store error messages
-#SBATCH --mem=20G
+#SBATCH --mem=70G
 #SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:rtx_a6000:1
-#SBATCH --exclude=tikgpu10
-#SBATCH --nodelist=tikgpu08
+#SBATCH --gres=gpu:1
+#SBATCH --nodelist=tikgpu10
 #CommentSBATCH --account=tik-internal
 #CommentSBATCH --constraint='titan_rtx|tesla_v100|titan_xp|a100_80gb'
 

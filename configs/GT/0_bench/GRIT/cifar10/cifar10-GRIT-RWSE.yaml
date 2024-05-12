@@ -7,11 +7,11 @@ pad_to_full_graph: True
 mlflow:
   use: False
   project: Exp
-  name: cifar10-GRIT-ESLapPE
+  name: cifar10-GRIT-RWSE
 wandb:
   use: True
   project: "PEGT"
-  name: "CIFAR10-GRIT-ESLapPE"
+  name: "CIFAR10-GRIT-RWSE"
   entity: jiaqing
 dataset:
   pe_transform_on_the_fly: False
@@ -21,18 +21,18 @@ dataset:
   task_type: classification
   transductive: False
   node_encoder: True
-  node_encoder_name: LinearNode+EquivStableLapPE
+  node_encoder_name: LinearNode+RWSE
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: LinearEdge
   edge_encoder_bn: False
-posenc_EquivStableLapPE:
+posenc_RWSE:
   enable: True
-  eigen:
-    laplacian_norm: none
-    eigvec_norm: L2
-    max_freqs: 18
-  raw_norm_type: none
+  kernel:
+    times_func: range(1,21)
+  model: Linear
+  dim_pe: 18
+  raw_norm_type: BatchNorm
 train:
   mode: custom
   batch_size: 16

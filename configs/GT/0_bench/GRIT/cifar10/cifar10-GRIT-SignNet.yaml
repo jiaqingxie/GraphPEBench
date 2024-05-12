@@ -3,6 +3,7 @@ metric_best: accuracy
 tensorboard_each_run: True  # Log to Tensorboard each run
 accelerator: "cuda:0"
 num_workers: 4
+pad_to_full_graph: True
 mlflow:
   use: False
   project: Exp
@@ -26,8 +27,7 @@ dataset:
   edge_encoder_name: LinearEdge
   edge_encoder_bn: False
 posenc_SignNet:
-  add_self_loops: True
-  dim_pe: 8
+  dim_pe: 18
   eigen:
     eigvec_norm: L2
     laplacian_norm: sym

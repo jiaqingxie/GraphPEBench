@@ -2,14 +2,14 @@ out_dir: results
 metric_best: accuracy-SBM
 tensorboard_each_run: True  # Log to Tensorboard each run
 accelerator: "cuda:0"
-mlflow:
-  use: False
-  project: Exp
-  name: pattern-GRIT-RRWP
+pad_to_full_graph: True
 wandb:
-  use: False
-  project: PATTERN
+  use: True
+  project: "PEGT"
+  name: "pattern-GRIT-RRWP"
+  entity: jiaqing
 dataset:
+  pe_transform_on_the_fly: True
   format: PyG-GNNBenchmarkDataset
   name: PATTERN
   task: graph
@@ -27,6 +27,7 @@ posenc_RRWP:
   ksteps: 21
   add_identity: True
   add_node_attr: False
+  add_inverse: False
 train:
   mode: custom
   batch_size: 32
@@ -45,6 +46,7 @@ gt:  # Hyperparameters optimized for up to ~500k budget.
   attn_dropout: 0.2
   layer_norm: False
   batch_norm: True
+  sparse: False
   attn:
     clamp: 5.
     act: 'relu'

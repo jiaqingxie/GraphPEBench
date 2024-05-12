@@ -3,6 +3,7 @@ metric_best: accuracy
 tensorboard_each_run: True  # Log to Tensorboard each run
 accelerator: "cuda:0"
 num_workers: 4
+pad_to_full_graph: True
 mlflow:
   use: False
   project: Exp
@@ -26,7 +27,6 @@ dataset:
   edge_encoder_name: LinearEdge
   edge_encoder_bn: False
 posenc_RWDIFF:
-  add_self_loops: True
   enable: True
   model: DeepSet
   dim_pe: 18 #( dim_pe + 60 = gt.dim_hidden (in below ) )
