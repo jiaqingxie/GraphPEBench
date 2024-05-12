@@ -6,10 +6,9 @@ pad_to_full_graph: True
 wandb:
   use: True
   project: "PEGT"
-  name: "cluster-GRIT-RRWP"
+  name: "cluster-GRIT-GCKN"
   entity: jiaqing
 dataset:
-  pe_transform_on_the_fly: True
   format: PyG-GNNBenchmarkDataset
   name: CLUSTER
   task: graph
@@ -17,17 +16,26 @@ dataset:
   transductive: False
   split_mode: standard
   node_encoder: True
-  node_encoder_name: LinearNode
+  node_encoder_name: LinearNode+GCKN
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: DummyEdge
   edge_encoder_bn: False
-posenc_RRWP:
+posenc_GCKN:
   enable: True
-  ksteps: 32
-  add_identity: True
-  add_node_attr: False
-  add_inverse: False
+  normalization: None
+  beta: 1 # 0.5 for method "pRWSE"
+  method: "diffusion"
+  use_edge_attr: False
+  eigen:
+    laplacian_norm: none
+    eigvec_norm: L2
+    max_freqs: 32
+  model: DeepSet
+  dim_pe: 32
+  layers: 4
+  n_heads: 4  # Only used when `posenc.model: Transformer`
+  raw_norm_type: none
 train:
   mode: custom
   batch_size: 16
@@ -46,7 +54,7 @@ gt:  # Hyperparameters optimized for ~500k budget.
   attn_dropout: 0.5
   layer_norm: False
   batch_norm: True
-  sparse: True
+  sparse: False
   update_e: True
   attn:
     clamp: 5.
