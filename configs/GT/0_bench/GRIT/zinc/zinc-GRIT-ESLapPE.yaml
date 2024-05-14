@@ -4,13 +4,11 @@ metric_best: mae
 metric_agg: argmin
 tensorboard_each_run: True  # Log to Tensorboard each run
 accelerator: "cuda:0"
-mlflow:
-  use: False
-  project: Exp
-  name: zinc-GRIT-RRWP
 wandb:
-  use: False
-  project: ZINC
+  use: True
+  project: "PEGT"
+  name: "ZINC-GRIT-ESLapPE"
+  entity: jiaqing
 dataset:
   format: PyG-ZINC
   name: subset
@@ -53,6 +51,7 @@ gt:
   layer_norm: False
   batch_norm: True
 #  bn_momentum: 0.01
+  sparse: False
   update_e: True
   attn_dropout: 0.2
   attn:

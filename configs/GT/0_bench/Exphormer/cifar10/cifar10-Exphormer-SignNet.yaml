@@ -3,7 +3,7 @@ metric_best: accuracy
 tensorboard_each_run: True  # Log to Tensorboard each run
 accelerator: "cuda:0"
 repeat: 4
-num_workers: 4s
+num_workers: 4
 mlflow:
   use: False
   project: Exp
