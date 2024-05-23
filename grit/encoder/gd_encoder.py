@@ -32,7 +32,7 @@ class GDNodeEncoder(torch.nn.Module):
         model_path = pecfg.model_path
         config_path = pecfg.config_path
         model_type = pecfg.model.lower()  # Encoder NN model type for PEs
-
+        self.measurement = pecfg.get("measurement", False)
         dim_pe = pecfg.dim_pe  # Size of embedding
         self.pass_as_var = pecfg.pass_as_var  # Pass PE also as a separate variable
 
@@ -89,22 +89,26 @@ class GDNodeEncoder(torch.nn.Module):
         else:
             h = batch.x
 
-        with torch.no_grad():
-            original_edges = batch.edge_index
-            batch.x_orig = batch.x
-            data_list = batch.to_data_list()
-            for i in range(len(data_list)):
-                data_list[i].edge_index = torch_geometric.utils.to_undirected(data_list[i].edge_index)
-            data_list = preprocess_dataset(data_list, self.config)
-            batch = torch_geometric.data.Batch.from_data_list(data_list).to(h.device)
+        if not self.measurement:
+            with torch.no_grad():
+                original_edges = batch.edge_index
+                batch.x_orig = batch.x
+                data_list = batch.to_data_list()
+                for i in range(len(data_list)):
+                    data_list[i].edge_index = torch_geometric.utils.to_undirected(data_list[i].edge_index)
+                data_list = preprocess_dataset(data_list, self.config)
+                batch = torch_geometric.data.Batch.from_data_list(data_list).to(h.device)
 
-            pred, pos_enc = self.eval_model(batch, 20, return_layers=True)
-            batch.edge_index = original_edges
+                pred, pos_enc = self.eval_model(batch, 20, return_layers=True)
+                batch.edge_index = original_edges
 
-            if self.use_embedding:
-                pos_enc = pos_enc[-1].detach()
-            else:
-                pos_enc = pred.detach()
+                if self.use_embedding:
+                    pos_enc = pos_enc[-1].detach()
+                else:
+                    pos_enc = pred.detach()
+        else:
+            pos_enc = batch.pos_enc
+
 
         pos_enc = self.pos_encoder(pos_enc)
 
