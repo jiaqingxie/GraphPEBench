@@ -24,6 +24,12 @@ from torch_geometric.utils import to_undirected, remove_self_loops, add_self_loo
 
 from ..utils import wl_positional_encoding, adj_mul
 import torch_geometric.utils as utils
+from attrdict import AttrDict
+import torch_geometric
+import json
+from ..encoder.neuraldrawer.network.preprocessing import preprocess_dataset
+from ..encoder.neuraldrawer.network.model import get_model
+import os
 
 class DisableLogging:
     def __enter__(self):
@@ -256,7 +262,7 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
         # if they have not yet been computed for 'eigen'.
         if laplacian_norm_type is not None or evals is None or evects is None:
             L_heat = to_scipy_sparse_matrix(
-                *get_laplacian(undir_edge_index, normalization=None, num_nodes=N)
+                *get_laplacian(undir_edge_index, normalizationv=None, num_nodes=N)
             )
             evals_heat, evects_heat = np.linalg.eigh(L_heat.toarray())
         else:
@@ -299,6 +305,48 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
                             spd=param.spd, # by default False
                             )
         data = transform(data)
+
+    if 'GD' in pe_types:
+        pecfg = cfg.posenc_GD
+        if pecfg.get("measurement", False):
+
+            model_path = pecfg.model_path
+            config_path = pecfg.config_path
+
+            if pecfg.use_embeddings:
+                use_embedding = True
+            else:
+                use_embedding = False
+
+            with open(os.getcwd() + config_path, 'r') as f:
+
+                config = AttrDict(json.load(f))
+
+            eval_model = get_model(config)
+            eval_model.load_state_dict(torch.load(os.getcwd() + model_path))
+            for param in eval_model.parameters():
+                param.requires_grad = False
+
+
+
+            with torch.no_grad():
+                original_edges = data.edge_index
+                data.x_orig = data.x
+                data_list = [data]
+
+                data_list[0].edge_index = torch_geometric.utils.to_undirected(data_list[0].edge_index)
+                data_list = preprocess_dataset(data_list, config)
+                batch = torch_geometric.data.Batch.from_data_list(data_list).to(data.x.device)
+
+                pred, pos_enc = eval_model(batch, 20, return_layers=True)
+                data.edge_index = original_edges
+
+                if use_embedding:
+                    pos_enc = pos_enc[-1].detach()
+                else:
+                    pos_enc = pred.detach()
+
+            data.pos_enc = pos_enc
 
     ### Deal with two places where
     # if cfg.gt.layer_type == "SAT":

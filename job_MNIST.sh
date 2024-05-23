@@ -4,9 +4,9 @@
 #SBATCH --error=/itet-stor/jiaxie/net_scratch/pe4gt/jobs/%j.err # where to store error messages
 #SBATCH --mem=20G
 #SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:rtx_a6000:1
+#SBATCH --gres=gpu:titan_xp:1
 #SBATCH --exclude=tikgpu10
-#SBATCH --nodelist=tikgpu08
+#SBATCH --nodelist=tikgpu03
 #CommentSBATCH --account=tik-internal
 #CommentSBATCH --constraint='titan_rtx|tesla_v100|titan_xp|a100_80gb'
 
@@ -46,11 +46,13 @@ echo "SLURM_JOB_ID: ${SLURM_JOB_ID}"
 [[ -f /itet-stor/${ETH_USERNAME}/net_scratch/conda/bin/conda ]] && eval "$(/itet-stor/${ETH_USERNAME}/net_scratch/conda/bin/conda shell.bash hook)"
 conda activate ${CONDA_ENVIRONMENT}
 echo "Conda activated"
-cd ${DIRECTORY}
+cd ${DIRECTORY}``
 
 # Execute your code
 
-python main.py --cfg configs/GT/0_bench/GraphGPS/zinc/zinc-GPS-PPR.yaml  wandb.use False accelerator "cuda:0" seed 2024
+# python main.py --cfg configs/GT/0_bench/GraphGPS/cifar10/cifar10-GPS-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 2024
+python main.py --cfg configs/GT/2_MPNN/GatedGCN/mnist/mnist-GatedGCN-full-ESLapPE.yaml  wandb.use True accelerator "cuda:0" seed 100
+
 echo "Finished at: $(date)"
 
 # End the script with exit code 0

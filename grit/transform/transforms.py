@@ -1,6 +1,6 @@
 import logging
 import time
-
+import gc
 import torch
 from torch_geometric.utils import subgraph
 from tqdm import tqdm
@@ -10,6 +10,11 @@ from functools import partial
 # from torch.multiprocessing import Pool
 from torch_geometric.data import Batch
 import torch_geometric as pyg
+import psutil
+def get_memory_usage():
+    process = psutil.Process()
+    mem_info = process.memory_info()
+    return mem_info.rss  # in bytes
 
 def pre_transform_in_memory(dataset, transform_func, show_progress=False, cfg=dict(), posenc_mode=False):
     """Pre-transform already loaded PyG dataset object.
@@ -32,6 +37,7 @@ def pre_transform_in_memory(dataset, transform_func, show_progress=False, cfg=di
 
     # todo:
     posenc_cfg = cfg.get("compute_posenc", dict())
+
 
     data_list = [transform_func(dataset.get(i))
                  for i in tqdm(range(len(dataset)),

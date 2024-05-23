@@ -1,14 +1,14 @@
 out_dir: results
 metric_best: mrr
-num_workers: 4
+num_workers: 1
 mlflow:
   use: False
   project: Exp
-  name: pcqm4m-contact-GPS-noPE
+  name: pcqm4m-contact-GRITSparse-noPE
 wandb:
   use: True
   project: "PEGT"
-  name: "pcqm4m-contact-GPS-noPE"
+  name: "pcqm4m-contact-GRITSparse-noPE"
   entity: jiaqing
 dataset:
   format: OGB
@@ -39,26 +39,37 @@ train:
   eval_period: 1
   ckpt_period: 100
 model:
-  type: GPSModel
+  type: GritTransformer
   loss_fun: cross_entropy
   graph_pooling: mean
 gt:
-  layer_type: CustomGatedGCN+Transformer
-  layers: 6
-  n_heads: 4
-  dim_hidden: 76  # `gt.dim_hidden` must match `gnn.dim_inner`
+  layer_type: GritTransformer
+  layers: 10
+  n_heads: 8
+  dim_hidden: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
   dropout: 0.0
-  attn_dropout: 0.5
-  layer_norm: True
-  batch_norm: False
+  layer_norm: False
+  batch_norm: True
+#  bn_momentum: 0.01
+  sparse: True
+  update_e: True
+  attn_dropout: 0.2
+  attn:
+    clamp: 5.
+    act: 'relu'
+    full_attn: True
+    edge_enhance: True
+    O_e: True
+    norm_e: True
+    fwl: False
 gnn:
   head: inductive_edge
   layers_pre_mp: 0
-  layers_post_mp: 1
-  dim_inner: 76  # `gt.dim_hidden` must match `gnn.dim_inner`
+  layers_post_mp: 2
+  dim_inner: 64  # `gt.dim_hidden` must match `gnn.dim_inner`
   batchnorm: True
   act: gelu
-  dropout: 0.0
+  dropout: 0.1
   agg: mean
   normalize_adj: False
 optim:
@@ -66,6 +77,6 @@ optim:
   optimizer: adamW
   weight_decay: 0.0
   base_lr: 0.001
-  max_epoch: 150
+  max_epoch: 100
   scheduler: cosine_with_warmup
-  num_warmup_epochs: 5
+  num_warmup_epochs: 10

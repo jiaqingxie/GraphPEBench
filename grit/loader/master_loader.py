@@ -5,7 +5,8 @@ import warnings
 from functools import partial
 from ..transform.expander_edges import generate_random_expander
 
-
+import psutil
+import gc
 import numpy as np
 import torch
 import torch_geometric.transforms as T
@@ -84,6 +85,10 @@ def log_loaded_dataset(dataset, format, name):
     #         f'{hist[i]} ({hist[i] / hist.sum() * 100:.2f}%)'
     #     )
 
+def get_memory_usage():
+    process = psutil.Process()
+    mem_info = process.memory_info()
+    return mem_info.rss  # in bytes
 
 @register_loader('custom_master_loader')
 def load_dataset_master(format, name, dataset_dir):
@@ -207,6 +212,9 @@ def load_dataset_master(format, name, dataset_dir):
         is_undirected = all(d.is_undirected() for d in dataset[:10])
         logging.info(f"  ...estimated to be undirected: {is_undirected}")
         if not cfg.dataset.pe_transform_on_the_fly:
+            gc.collect()  # Perform garbage collection to avoid measuring old allocations
+            mem_before = get_memory_usage()
+
             pre_transform_in_memory(dataset,
                                     partial(compute_posenc_stats,
                                             pe_types=pe_enabled_list,
@@ -217,6 +225,12 @@ def load_dataset_master(format, name, dataset_dir):
                                     cfg=cfg,
                                     posenc_mode=True
                                     )
+            mem_after = get_memory_usage()
+
+            # Calculate memory usage
+            mem_used = mem_after - mem_before
+
+            logging.info(f"CPU memory used: {mem_used / (1024 ** 2):.2f} MB")
 
             elapsed = time.perf_counter() - start
             timestr = time.strftime('%H:%M:%S', time.gmtime(elapsed)) \
@@ -231,6 +245,8 @@ def load_dataset_master(format, name, dataset_dir):
             if dataset.transform is None:
                 dataset.transform = pe_transform
             else:
+                print(dataset.transform)
+                print(pe_transform)
                 dataset.transform = T.compose([pe_transform, dataset.transform])
 
     expand = cfg.prep.get("exp", False)
