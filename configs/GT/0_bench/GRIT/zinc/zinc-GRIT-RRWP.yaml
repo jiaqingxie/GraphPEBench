@@ -4,13 +4,16 @@ metric_best: mae
 metric_agg: argmin
 tensorboard_each_run: True  # Log to Tensorboard each run
 accelerator: "cuda:0"
+repeat: 4
 mlflow:
   use: False
   project: Exp
   name: zinc-GRIT-RRWP
 wandb:
-  use: False
-  project: ZINC
+  use: True
+  project: "PEGT"
+  name: "ZINC-GRIT-RRWP"
+  entity: jiaqing
 dataset:
   format: PyG-ZINC
   name: subset
@@ -38,6 +41,7 @@ train:
   enable_ckpt: True  # Checkpointing can now be disabled to save I/O when e.g. just benchmarking.
   ckpt_best: True  # WARNING: Checkpoint every epoch a better model is found may increase I/O significantly.
   ckpt_clean: True # Delete old ckpt each time.
+
 model:
   type: GritTransformer
   loss_fun: l1
@@ -52,6 +56,7 @@ gt:
   layer_norm: False
   batch_norm: True
 #  bn_momentum: 0.01
+  sparse: False
   update_e: True
   attn_dropout: 0.2
   attn:
@@ -77,7 +82,8 @@ optim:
   optimizer: adamW
   weight_decay: 1e-5
   base_lr: 1e-3
-  max_epoch: 2000
+  max_epoch: 1500
   num_warmup_epochs: 50
   scheduler: cosine_with_warmup
   min_lr: 1e-6
+

@@ -3,7 +3,7 @@ metric_best: accuracy
 tensorboard_each_run: True  # Log to Tensorboard each run
 accelerator: "cuda:0"
 num_workers: 4
-pad_to_full_graph: True
+#pad_to_full_graph: True
 mlflow:
   use: False
   project: Exp

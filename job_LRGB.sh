@@ -2,11 +2,11 @@
 #SBATCH --mail-type=NONE # mail configuration: NONE, BEGIN, END, FAIL, REQUEUE, ALL
 #SBATCH --output=/itet-stor/jiaxie/net_scratch/pe4gt/jobs/%j.out # where to store the output (%j is the JOBID), subdirectory "jobs" must exist
 #SBATCH --error=/itet-stor/jiaxie/net_scratch/pe4gt/jobs/%j.err # where to store error messages
-#SBATCH --mem=40G
+#SBATCH --mem=50G
 #SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:geforce_rtx_3090:1
+#SBATCH --gres=gpu:rtx_a6000:1
 #SBATCH --exclude=tikgpu10
-#SBATCH --nodelist=tikgpu07
+#SBATCH --nodelist=tikgpu08
 #CommentSBATCH --account=tik-internal
 #CommentSBATCH --constraint='titan_rtx|tesla_v100|titan_xp|a100_80gb'
 
@@ -50,8 +50,11 @@ cd ${DIRECTORY}
 
 # Execute your code
 
-#python main.py --cfg configs/GT/0_bench/GRITSparseConv/LRGB/pcqm_contact/pcqm-contact-GRITSparse-RWDIFF.yaml  wandb.use True accelerator "cuda:0" seed 100
-python main.py --cfg configs/GT/0_bench/GraphGPS/ogbg/ogbg-GPS-ESLapPE.yaml  wandb.use False accelerator "cuda:0" seed 0
+#python main.py --cfg configs/GT/0_bench/GRIT/LRGB/peptides_struct/peptides-struct-GRIT-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 100
+python main.py --cfg configs/GT/0_bench/GRIT/LRGB/peptides_func/peptides-func-GRIT-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 100
+#python main.py --cfg configs/GT/0_bench/GraphGPS/ogbg/ogbg-GPS-ESLapPE.yaml  wandb.use False accelerator "cuda:0" seed 0
+#python main.py --cfg configs/GT/2_MPNN/GatedGCN/LRGB/peptides_func/peptides-func-GatedGCN-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 7
+#python main.py --cfg configs/GT/2_MPNN/GatedGCN/LRGB/peptides_struct/peptides-struct-GatedGCN-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 7
 
 echo "Finished at: $(date)"
 

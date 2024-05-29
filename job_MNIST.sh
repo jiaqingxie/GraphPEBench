@@ -4,9 +4,9 @@
 #SBATCH --error=/itet-stor/jiaxie/net_scratch/pe4gt/jobs/%j.err # where to store error messages
 #SBATCH --mem=20G
 #SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:titan_xp:1
+#SBATCH --gres=gpu:rtx_a6000:1
 #SBATCH --exclude=tikgpu10
-#SBATCH --nodelist=tikgpu03
+#SBATCH --nodelist=tikgpu08
 #CommentSBATCH --account=tik-internal
 #CommentSBATCH --constraint='titan_rtx|tesla_v100|titan_xp|a100_80gb'
 
@@ -50,8 +50,13 @@ cd ${DIRECTORY}``
 
 # Execute your code
 
-# python main.py --cfg configs/GT/0_bench/GraphGPS/cifar10/cifar10-GPS-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 2024
-python main.py --cfg configs/GT/2_MPNN/GatedGCN/mnist/mnist-GatedGCN-full-ESLapPE.yaml  wandb.use True accelerator "cuda:0" seed 100
+python main.py --cfg configs/GT/0_bench/GRITSparseConv/pattern/pattern-GRITSparse-COREGD.yaml  wandb.use True accelerator "cuda:0" seed 0
+
+#python main.py --cfg configs/GT/0_bench/GRIT/zinc/zinc-GRIT-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 100
+#python main.py --cfg configs/GT/2_MPNN/GatedGCN/mnist/mnist-GatedGCN-full-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 100
+#python main.py --cfg configs/GT/2_MPNN/GatedGCN/cifar10/cifar10-GatedGCN-full-RWDIFF.yaml  wandb.use True accelerator "cuda:0" seed 100
+#python main.py --cfg configs/GT/2_MPNN/GatedGCN/cluster/cluster-GatedGCN-full-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 100
+#python main.py --cfg configs/GT/2_MPNN/GatedGCN/zinc/zinc-GatedGCN-full-ESLapPE.yaml  wandb.use True accelerator "cuda:0" seed 42
 
 echo "Finished at: $(date)"
 

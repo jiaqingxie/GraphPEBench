@@ -7,10 +7,12 @@ accelerator: "cuda:0"
 mlflow:
   use: False
   project: Exp
-  name: zinc-GRIT-RRWP
+  name: zinc-GRIT-PPR
 wandb:
-  use: False
-  project: ZINC
+  use: True
+  project: "PEGT"
+  name: "ZINC-GRIT-PPR"
+  entity: jiaqing
 dataset:
   format: PyG-ZINC
   name: subset
@@ -30,9 +32,9 @@ posenc_PPR:
   eigen:
     laplacian_norm: none
     eigvec_norm: L2
-    max_freqs: 4
+    max_freqs: 10
   model: DeepSet
-  dim_pe: 4
+  dim_pe: 10
   layers: 2
   n_heads: 4  # Only used when `posenc.model: Transformer`
   raw_norm_type: none
@@ -43,6 +45,7 @@ train:
   enable_ckpt: True  # Checkpointing can now be disabled to save I/O when e.g. just benchmarking.
   ckpt_best: True  # WARNING: Checkpoint every epoch a better model is found may increase I/O significantly.
   ckpt_clean: True # Delete old ckpt each time.
+
 model:
   type: GritTransformer
   loss_fun: l1
@@ -57,6 +60,7 @@ gt:
   layer_norm: False
   batch_norm: True
 #  bn_momentum: 0.01
+  sparse: False
   update_e: True
   attn_dropout: 0.2
   attn:
@@ -82,7 +86,8 @@ optim:
   optimizer: adamW
   weight_decay: 1e-5
   base_lr: 1e-3
-  max_epoch: 2000
+  max_epoch: 1500
   num_warmup_epochs: 50
   scheduler: cosine_with_warmup
   min_lr: 1e-6
+
