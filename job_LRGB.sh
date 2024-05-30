@@ -2,8 +2,8 @@
 #SBATCH --mail-type=NONE # mail configuration: NONE, BEGIN, END, FAIL, REQUEUE, ALL
 #SBATCH --output=/itet-stor/jiaxie/net_scratch/pe4gt/jobs/%j.out # where to store the output (%j is the JOBID), subdirectory "jobs" must exist
 #SBATCH --error=/itet-stor/jiaxie/net_scratch/pe4gt/jobs/%j.err # where to store error messages
-#SBATCH --mem=50G
-#SBATCH --cpus-per-task=4
+#SBATCH --mem=60G
+#SBATCH --cpus-per-task=2
 #SBATCH --gres=gpu:rtx_a6000:1
 #SBATCH --exclude=tikgpu10
 #SBATCH --nodelist=tikgpu08
@@ -50,8 +50,11 @@ cd ${DIRECTORY}
 
 # Execute your code
 
-#python main.py --cfg configs/GT/0_bench/GRIT/LRGB/peptides_struct/peptides-struct-GRIT-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 100
-python main.py --cfg configs/GT/0_bench/GRIT/LRGB/peptides_func/peptides-func-GRIT-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 100
+python main.py --cfg configs/GT/0_bench/Exphormer/LRGB/COCO/coco-Exphormer-noPE.yaml wandb.use True accelerator "cuda:0" seed 0
+
+
+#python main.py --cfg configs/GT/0_bench/GRIT/LRGB/peptides_struct/peptides-struct-GRIT-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 0
+#python main.py --cfg configs/GT/0_bench/GraphGPS/LRGB/COCO/coco-GPS-WLPE.yaml wandb.use True accelerator "cuda:0" seed 7
 #python main.py --cfg configs/GT/0_bench/GraphGPS/ogbg/ogbg-GPS-ESLapPE.yaml  wandb.use False accelerator "cuda:0" seed 0
 #python main.py --cfg configs/GT/2_MPNN/GatedGCN/LRGB/peptides_func/peptides-func-GatedGCN-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 7
 #python main.py --cfg configs/GT/2_MPNN/GatedGCN/LRGB/peptides_struct/peptides-struct-GatedGCN-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 7

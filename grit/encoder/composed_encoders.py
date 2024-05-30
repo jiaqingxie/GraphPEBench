@@ -12,6 +12,7 @@ from grit.encoder.svd_pos_encoder import  SVDNodeEncoder
 from grit.encoder.ppr_pos_encoder import  PPRNodeEncoder
 from grit.encoder.signnet_pos_encoder import SignNetNodeEncoder
 from grit.encoder.voc_superpixels_encoder import VOCNodeEncoder
+from grit.encoder.voc_superpixels_encoder import COCONodeEncoder
 from grit.encoder.type_dict_encoder import TypeDictNodeEncoder
 from grit.encoder.linear_node_encoder import LinearNodeEncoder
 from grit.encoder.equivstable_laplace_pos_encoder import EquivStableLapPENodeEncoder
@@ -110,6 +111,7 @@ ds_encs = {'Atom': AtomEncoder,
            'PPANode': PPANodeEncoder,
            'TypeDictNode': TypeDictNodeEncoder,
            'VOCNode': VOCNodeEncoder,
+           'COCONode': COCONodeEncoder,
            'LinearNode': LinearNodeEncoder}
 
 # Positional Encoding node encoders.

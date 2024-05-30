@@ -3,7 +3,7 @@ metric_best: f1
 wandb:
   use: True
   project: "PEGT"
-  name: "COCO-GPS-ESLapPE"
+  name: "COCO-GPS-LapPE"
   entity: jiaqing
 dataset:
   format: PyG-COCOSuperpixels
@@ -13,12 +13,12 @@ dataset:
   task_type: classification
   transductive: False
   node_encoder: True
-  node_encoder_name: COCONode+EquivStableLapPE
+  node_encoder_name: COCONode+LapPE
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: COCOEdge
   edge_encoder_bn: False
-posenc_EquivStableLapPE:
+posenc_LapPE:
   enable: True
   eigen:
     laplacian_norm: none

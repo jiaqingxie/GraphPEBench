@@ -3,7 +3,7 @@ metric_best: f1
 wandb:
   use: True
   project: "PEGT"
-  name: "COCO-GPS-ESLapPE"
+  name: "COCO-GPS-noPE"
   entity: jiaqing
 dataset:
   format: PyG-COCOSuperpixels
@@ -13,13 +13,13 @@ dataset:
   task_type: classification
   transductive: False
   node_encoder: True
-  node_encoder_name: COCONode+EquivStableLapPE
+  node_encoder_name: COCONode #+EquivStableLapPE
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: COCOEdge
   edge_encoder_bn: False
 posenc_EquivStableLapPE:
-  enable: True
+  enable: False
   eigen:
     laplacian_norm: none
     eigvec_norm: L2
@@ -64,3 +64,12 @@ optim:
   max_epoch: 200
   scheduler: cosine_with_warmup
   num_warmup_epochs: 10
+#optim:
+#  optimizer: adamW
+#  weight_decay: 0.0
+#  base_lr: 0.0005
+#  max_epoch: 200
+#  scheduler: reduce_on_plateau
+#  reduce_factor: 0.5
+#  schedule_patience: 10
+#  min_lr: 1e-5

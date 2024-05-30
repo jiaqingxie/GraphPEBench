@@ -4,9 +4,9 @@
 #SBATCH --error=/itet-stor/jiaxie/net_scratch/pe4gt/jobs/%j.err # where to store error messages
 #SBATCH --mem=20G
 #SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:rtx_a6000:1
+#SBATCH --gres=gpu:geforce_rtx_3090:1
 #SBATCH --exclude=tikgpu10
-#SBATCH --nodelist=tikgpu08
+#SBATCH --nodelist=tikgpu07
 #CommentSBATCH --account=tik-internal
 #CommentSBATCH --constraint='titan_rtx|tesla_v100|titan_xp|a100_80gb'
 
@@ -50,7 +50,7 @@ cd ${DIRECTORY}``
 
 # Execute your code
 
-python main.py --cfg configs/GT/0_bench/GRITSparseConv/pattern/pattern-GRITSparse-COREGD.yaml  wandb.use True accelerator "cuda:0" seed 0
+python main.py --cfg configs/GT/0_bench/GraphGPS/mnist/mnist-GPS-COREGD.yaml  wandb.use True accelerator "cuda:0" seed 7
 
 #python main.py --cfg configs/GT/0_bench/GRIT/zinc/zinc-GRIT-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 100
 #python main.py --cfg configs/GT/2_MPNN/GatedGCN/mnist/mnist-GatedGCN-full-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 100

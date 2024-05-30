@@ -3,7 +3,7 @@ metric_best: f1
 wandb:
   use: True
   project: "PEGT"
-  name: "COCO-GPS-ESLapPE"
+  name: "COCO-GPS-RWSE"
   entity: jiaqing
 dataset:
   format: PyG-COCOSuperpixels
@@ -13,21 +13,18 @@ dataset:
   task_type: classification
   transductive: False
   node_encoder: True
-  node_encoder_name: COCONode+EquivStableLapPE
+  node_encoder_name: COCONode+RWSE
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: COCOEdge
   edge_encoder_bn: False
-posenc_EquivStableLapPE:
+posenc_RWSE:
   enable: True
-  eigen:
-    laplacian_norm: none
-    eigvec_norm: L2
-    max_freqs: 10
-  model: DeepSet
+  kernel:
+    times_func: range(1,21)
+  model: Linear
   dim_pe: 16
-  layers: 2
-  raw_norm_type: none
+  raw_norm_type: BatchNorm
 train:
   mode: custom
   batch_size: 50

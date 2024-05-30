@@ -3,7 +3,7 @@ metric_best: f1
 wandb:
   use: True
   project: "PEGT"
-  name: "COCO-GPS-ESLapPE"
+  name: "COCO-GPS-GCKN"
   entity: jiaqing
 dataset:
   format: PyG-COCOSuperpixels
@@ -13,20 +13,25 @@ dataset:
   task_type: classification
   transductive: False
   node_encoder: True
-  node_encoder_name: COCONode+EquivStableLapPE
+  node_encoder_name: COCONode+GCKN
   node_encoder_bn: False
   edge_encoder: True
   edge_encoder_name: COCOEdge
   edge_encoder_bn: False
-posenc_EquivStableLapPE:
+posenc_GCKN:
   enable: True
+  normalization: None
+  beta: 1 # 0.5 for method "pRWSE"
+  method: "diffusion"
+  use_edge_attr: False
   eigen:
     laplacian_norm: none
     eigvec_norm: L2
-    max_freqs: 10
+    max_freqs: 16
   model: DeepSet
   dim_pe: 16
   layers: 2
+  n_heads: 4  # Only used when `posenc.model: Transformer`
   raw_norm_type: none
 train:
   mode: custom

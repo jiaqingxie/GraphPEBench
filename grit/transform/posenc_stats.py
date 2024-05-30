@@ -336,7 +336,7 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
 
                 data_list[0].edge_index = torch_geometric.utils.to_undirected(data_list[0].edge_index)
                 data_list = preprocess_dataset(data_list, config)
-                batch = torch_geometric.data.Batch.from_data_list(data_list).to(data.x.device)
+                batch = torch_geometric.data.Batch.from_data_list(data_list)
 
                 pred, pos_enc = eval_model(batch, 20, return_layers=True)
                 data.edge_index = original_edges
