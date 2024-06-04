@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:geforce_rtx_3090:1
 #SBATCH --exclude=tikgpu10
-#SBATCH --nodelist=tikgpu07
+#SBATCH --nodelist=tikgpu09
 #CommentSBATCH --account=tik-internal
 #CommentSBATCH --constraint='titan_rtx|tesla_v100|titan_xp|a100_80gb'
 
@@ -50,13 +50,16 @@ cd ${DIRECTORY}``
 
 # Execute your code
 
-python main.py --cfg configs/GT/0_bench/GraphGPS/mnist/mnist-GPS-COREGD.yaml  wandb.use True accelerator "cuda:0" seed 7
+#python main.py --cfg configs/GT/0_bench/GraphGPS/mnist/mnist-GPS-COREGD.yaml  wandb.use True accelerator "cuda:0" seed 7
 
-#python main.py --cfg configs/GT/0_bench/GRIT/zinc/zinc-GRIT-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 100
-#python main.py --cfg configs/GT/2_MPNN/GatedGCN/mnist/mnist-GatedGCN-full-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 100
-#python main.py --cfg configs/GT/2_MPNN/GatedGCN/cifar10/cifar10-GatedGCN-full-RWDIFF.yaml  wandb.use True accelerator "cuda:0" seed 100
-#python main.py --cfg configs/GT/2_MPNN/GatedGCN/cluster/cluster-GatedGCN-full-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 100
-#python main.py --cfg configs/GT/2_MPNN/GatedGCN/zinc/zinc-GatedGCN-full-ESLapPE.yaml  wandb.use True accelerator "cuda:0" seed 42
+#python main.py --cfg configs/GT/0_bench/GINEGRIT/cluster/cluster-GINE-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 0
+#python main.py --cfg configs/GT/0_bench/GRITSparseConv/zinc/zinc-GRITSparse-LapPE.yaml  wandb.use True accelerator "cuda:0" seed 0
+
+#python main.py --cfg configs/GT/2_MPNN/GatedGCN/mnist/mnist-GatedGCN-LapPE.yaml  wandb.use True accelerator "cuda:0" seed 0
+#python main.py --cfg configs/GT/2_MPNN/GatedGCN/cifar10/cifar10-GatedGCN-LapPE.yaml  wandb.use True accelerator "cuda:0" seed 0
+#python main.py --cfg configs/GT/2_MPNN/GatedGCN/cluster/cluster-GatedGCN-LapPE.yaml  wandb.use True accelerator "cuda:0" seed 100
+#python main.py --cfg configs/GT/2_MPNN/GatedGCN/pattern/pattern-GatedGCN-LapPE.yaml  wandb.use True accelerator "cuda:0" seed 7
+python main.py --cfg configs/GT/2_MPNN/GatedGCN/zinc/zinc-GatedGCN-LapPE.yaml  wandb.use True accelerator "cuda:0" seed 7
 
 echo "Finished at: $(date)"
 

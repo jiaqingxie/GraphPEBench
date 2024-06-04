@@ -32,7 +32,7 @@ posenc_RWDIFF:
   raw_norm_type: none
 train:
   mode: custom
-  batch_size: 128
+  batch_size: 200
   eval_period: 1
   ckpt_period: 100
 model:
@@ -40,20 +40,20 @@ model:
   loss_fun: cross_entropy
   graph_pooling: mean
 gnn:
+  head: mlp_graph
   layers_pre_mp: 0
-  layers_mp: 5
-  layers_post_mp: 1
-  dim_inner: 138
+  layers_mp: 10
+  layers_post_mp: 3
+  dim_inner: 95
   layer_type: gatedgcnconv
-  act: relu
+  act: gelu
   residual: True
-  dropout: 0.0
+  dropout: 0.1
 optim:
   optimizer: adamW
   weight_decay: 0.0
   base_lr: 0.001
-  max_epoch: 120
+  max_epoch: 200
   scheduler: reduce_on_plateau
   reduce_factor: 0.5
   schedule_patience: 20
-  min_lr: 1e-5

@@ -18,10 +18,10 @@ dataset:
   task_type: classification
   transductive: False
   node_encoder: True
-  node_encoder_name: VOCNode #+EquivStableLapPE
+  node_encoder_name: COCONode #+EquivStableLapPE
   node_encoder_bn: False
   edge_encoder: True
-  edge_encoder_name: VOCEdge
+  edge_encoder_name: COCOEdge
   edge_encoder_bn: False
 posenc_EquivStableLapPE:
   enable: False

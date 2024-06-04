@@ -2,12 +2,12 @@
 #SBATCH --mail-type=NONE # mail configuration: NONE, BEGIN, END, FAIL, REQUEUE, ALL
 #SBATCH --output=/itet-stor/jiaxie/net_scratch/pe4gt/jobs/%j.out # where to store the output (%j is the JOBID), subdirectory "jobs" must exist
 #SBATCH --error=/itet-stor/jiaxie/net_scratch/pe4gt/jobs/%j.err # where to store error messages
-#SBATCH --mem=50G
-#SBATCH --time=300
+#SBATCH --mem=120G
+#SBATCH --time=200
 #SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:geforce_rtx_3090:1
-#SBATCH --exclude=tikgpu10
-#SBATCH --nodelist=tikgpu07
+#SBATCH --gres=gpu:a100_80gb:1
+
+#SBATCH --nodelist=tikgpu10
 #CommentSBATCH --account=tik-internal
 #CommentSBATCH --constraint='titan_rtx|tesla_v100|titan_xp|a100_80gb'
 
@@ -50,13 +50,13 @@ echo "Conda activated"
 cd ${DIRECTORY}
 
 # Execute your code
-#python main.py --cfg configs/GT/0_bench/Exphormer/ogbn_arxiv/ogbn_arxiv-Exphormer-RWSE.yaml  wandb.use True accelerator "cuda:0" seed 7
+#python main.py --cfg configs/GT/0_bench/GRITSparseConv/ogbn_arxiv/ogbn_arxiv-GRITSparse-WLPE.yaml  wandb.use True accelerator "cuda:0" seed 0
 #python main.py --cfg configs/GT/0_bench/GraphGPS/ogbg/ogbg_molpcba/ogbg-GPS-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 42
 #python main.py --cfg configs/GT/0_bench/Exphormer/ogbg/ogbg_molpcba/ogbg-Exphormer-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 0
 #python main.py --cfg configs/GT/0_bench/GRITSparseConv/ogbg_molhiv/ogbg-GRITSparse-RRWP.yaml  wandb.use True accelerator "cuda:0" seed 100
-#python main.py --cfg configs/GT/0_bench/GRITSparseConv/ogbg_molpcba/ogbg-GRITSparse-LapPE.yaml  wandb.use True accelerator "cuda:0" seed 100
+python main.py --cfg configs/GT/0_bench/GRITSparseConv/ogbg_molpcba/ogbg-GRITSparse-LapPE.yaml  wandb.use True accelerator "cuda:0" seed 100
 
-python main.py --cfg configs/GT/0_bench/GraphGPS/malnet_tiny/malnettiny-GPS-LapPE.yaml  wandb.use True accelerator "cuda:0" seed 7
+#python main.py --cfg configs/GT/0_bench/GraphGPS/malnet_tiny/malnettiny-GPS-LapPE.yaml  wandb.use True accelerator "cuda:0" seed 7
 
 echo "Finished at: $(date)"
 
