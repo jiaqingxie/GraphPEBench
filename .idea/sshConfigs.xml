@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="SshConfigs">
-    <configs>
-      <sshConfig authType="PASSWORD" connectionConfig="{&quot;serverAliveInterval&quot;:300}" host="tik42x.ethz.ch" id="cc5d378b-3604-4cb7-8ad6-01a83aeb2888" port="22" nameFormat="DESCRIPTIVE" username="jiaxie" useOpenSSHConfig="true" />
-    </configs>
-  </component>
-</project>
