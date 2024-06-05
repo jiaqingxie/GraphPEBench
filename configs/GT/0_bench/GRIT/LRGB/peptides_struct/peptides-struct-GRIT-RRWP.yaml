@@ -32,8 +32,8 @@ posenc_RRWP:
   add_inverse: False
 train:
   mode: custom
-#  batch_size: 32
-  batch_size: 16
+  batch_size: 32
+#  batch_size: 16
   eval_period: 1
   ckpt_period: 100
 model:

@@ -12,7 +12,6 @@ wandb:
   name: "peptides-func-GRIT-RRWP"
   entity: jiaqing
 dataset:
-  pe_transform_on_the_fly: True
   format: OGB
   name: peptides-functional
   task: graph
