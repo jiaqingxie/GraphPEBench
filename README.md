@@ -34,13 +34,12 @@ python main.py --cfg configs/GT/0_bench/GRIT/zinc/zinc-GRIT-RWDIFF.yaml  wandb.u
 - EGT (included) `grit/layer/egt_layer.py`
 - SAN (included) `grit/layer/san_layer.py`
 - GraphTrans (included) `grit/layer/graphtrans_layer.py`
-- GraphiT (to be included) `grit/layer/graphit_layer.py`
-- Original_GT (to be included) `grit/layer/origin_gt_layer.py`
+- GraphiT (included) `grit/layer/graphit_layer.py`
+- Original_GT (included) `grit/layer/origin_gt_layer.py`
 - Specformer (for molecules so not included) ===> inside structure is just vanilla transformer
 - UniMP (included) `grit/layer/unimp.py`
-- SAT (to be included) `grit/layer/SAT_layer.py`
-- GRPE (to be included)
-- GPS++ (for molecules so I not included)
+- SAT (included) `grit/layer/SAT_layer.py`
+
 
 
 ### Implemented Existing Positional Encoding in Graph Transformers (before April 2024)
@@ -57,11 +56,11 @@ python main.py --cfg configs/GT/0_bench/GRIT/zinc/zinc-GRIT-RWDIFF.yaml  wandb.u
 - WL test based PE (WLPE) `grit/encoder/wlpe_pos_encoder.py`
 - Diffusion on Kernelized Laplacian PE (GCKN) `grit/encoder/gckn_pos_encoder.py`
 - Diffusion on Random Walk Probabilities (LSPE) `grit/encoder/rwdiff_pos_encoder.py`
-- CORE Graph Rewiring and Drawing (CORE) (to be included)
+- CORE Graph Rewiring and Drawing (CORE) `grit/encoder/gd_encoder.py`
 
 ### Configurations and Scripts
 
 - Configurations are available under `PEGT/configs/GT/0_bench/xx/dataset/dataset-xx-yy.yaml` where
 dataset is the name of the dataset, xx is the attention module and yy is your positional encoding
 - Scripts to execute are available under `./scripts/xxx.sh`
-  - will run 4 trials of experiments parallelly on `GPU:0,1,2,3`. (To be updated)
+  - will run 4 trials of experiments parallelly on `GPU:0,1,2,3`. 
