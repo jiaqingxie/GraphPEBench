@@ -14,8 +14,27 @@ from grit.loss.subtoken_prediction_loss import subtoken_cross_entropy
 from grit.utils import cfg_to_dict, flatten_dict, make_wandb_name, mlflow_log_cfgdict
 import warnings
 from collections import defaultdict
-
-
+def ensure_transductive_batch(pred, true, batch):
+    if hasattr(batch, "input_id"):  # tested on NeighborLoader
+        pred, true = pred[:batch.batch_size], true[:batch.batch_size]
+    return pred, true
+def process_batch_idx(batch_idx, true):
+    if batch_idx is None:
+        return
+    if cfg.virtual_node:  # remove virtual node
+        batch_idx = torch.concat([
+            batch_idx[batch_idx == i][:-1]
+            for i in range(batch_idx.max().item() + 1)
+        ])
+    # Pad batch index for hybrid tasks (set batch index for graph heads to -1)
+    if (pad := true.shape[0] - batch_idx.shape[0]) > 0:
+        if "hybrid" not in cfg.gnn.head:
+            raise ValueError("Evaluating non-hybrid task. Mismatched dimensions"
+                             f" between labels ({true.shape=}) and batch index "
+                             f"({batch_idx.shape=})")
+        pad_idx = -torch.ones(pad, dtype=torch.long, device=batch_idx.device)
+        batch_idx = torch.hstack([batch_idx, pad_idx])
+    return batch_idx
 def arxiv_cross_entropy(pred, true, split_idx):
     true = true.squeeze(-1)
     if pred.ndim > 1 and true.ndim == 1:
@@ -34,6 +53,9 @@ def train_epoch(logger, loader, model, optimizer, scheduler, batch_accumulation)
         batch.split = 'train'
         batch.to(torch.device(cfg.device))
         pred, true = model(batch)
+
+        pred, true = ensure_transductive_batch(pred, true, batch)
+        batch_idx = process_batch_idx(batch.batch, true)
 
         if cfg.dataset.name == 'ogbg-code2':
             loss, pred_score = subtoken_cross_entropy(pred, true)

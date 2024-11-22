@@ -5,6 +5,7 @@ import torch_geometric.graphgym.register as register
 import torch_geometric.nn as pyg_nn
 from torch_geometric.graphgym.models.layer import LayerConfig
 from torch_geometric.graphgym.register import register_layer
+from torch_geometric.nn.conv.res_gated_graph_conv import ResGatedGraphConv
 from torch_scatter import scatter
 
 
@@ -150,3 +151,34 @@ class GatedGCNGraphGymLayer(nn.Module):
 
     def forward(self, batch):
         return self.model(batch)
+
+@register_layer('resgatedgcnconv')
+class ResGatedGCNConvGraphGymLayer(nn.Module):
+    """ResGatedGCN layer"""
+
+    def __init__(self, layer_config: LayerConfig, **kwargs):
+        super().__init__()
+        self.model = ResGatedGraphConv(layer_config.dim_in,
+                                       layer_config.dim_out,
+                                       bias=layer_config.has_bias,
+                                       **kwargs)
+
+    def forward(self, batch):
+        batch.x = self.model(batch.x, batch.edge_index)
+        return batch
+
+class ResGatedGCNConvLayer(nn.Module):
+    """ResGatedGCN layer"""
+
+    def __init__(self, in_dim, out_dim, dropout, residual, act='relu', **kwargs):
+        super().__init__()
+        self.model = ResGatedGraphConv(in_dim,
+                                       out_dim,
+                                       dropout=dropout,
+                                       act=register.act_dict[act](),
+                                       residual=residual,
+                                       **kwargs)
+
+    def forward(self, batch):
+        batch.x = self.model(batch.x, batch.edge_index)
+        return batch

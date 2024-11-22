@@ -18,3 +18,16 @@ def set_cfg_pretrained(cfg):
 
     # Freeze the main pretrained 'body' of the model, learning only the new head
     cfg.pretrained.freeze_main = False
+
+    # ----------------------------------------------------------------------- #
+    # Generic pre-trained model with exact (even the prediction heads) configs.
+    # This mode does not require explicit checking of the pre-trained model
+    # config, and implicitly assumes that it is consistent with the new ones.
+    # Useful for further training the model on a specific dataset.
+    # ----------------------------------------------------------------------- #
+
+    cfg.pretrained_exact = CN()
+
+    # Directory path to the saved model, if set, load the model from there
+    # and fine-tune on the current dataset.
+    cfg.pretrained_exact.model_dir = ""

@@ -10,7 +10,10 @@ from yacs.config import CfgNode
 import hashlib
 from torch_geometric.utils import to_dense_adj
 from torch_geometric.utils import  add_self_loops
-
+def get_device(device: str, default_device: str) -> str:
+    if device == "default":
+        device = default_device
+    return device
 def negate_edge_index(edge_index, batch=None):
     """Negate batched sparse adjacency matrices given by edge indices.
 

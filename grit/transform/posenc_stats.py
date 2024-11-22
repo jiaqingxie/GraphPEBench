@@ -80,6 +80,7 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
     'ElstaticSE': Kernel based on the electrostatic interaction between nodes.
     'RRWP': Relative Random Walk Probabilities PE (Ours, for GRIT)
     'SVD': SVD decomposition of the adjacency matrix (Edge Augmented Transformer)
+    'GPSE':Graph Positional and Structural Encoder, ICML 2024
     'PPR': Personalized PageRank
     'NODE2VEC': Node2Vec
     'WLPE': WL test based positional encodings for the given graph
@@ -102,7 +103,7 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
     for t in pe_types:
         if t not in ['LapPE', 'EquivStableLapPE', 'SignNet',
                      'RWSE', 'HKdiagSE', 'HKfullPE', 'ElstaticSE','RRWP',
-                     'SVD', 'PPR', 'WLPE', 'GCKN', 'RWDIFF', 'GD']:
+                     'SVD', 'PPR', 'WLPE', 'GCKN', 'RWDIFF', 'GD', 'GPSE']:
             raise ValueError(f"Unexpected PE stats selection {t} in {pe_types}")
 
     # Basic preprocessing of the input graph.

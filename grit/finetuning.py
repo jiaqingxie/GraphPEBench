@@ -139,3 +139,37 @@ def init_model_from_pretrained(model, pretrained_dir,
             if not key.startswith('post_mp'):
                 param.requires_grad = False
     return model
+
+def init_model_from_pretrained_exact(model, pretrained_path):
+    """Copy model parameters from a pretrained model.
+
+    Args:
+        model: Initialized model with random weights.
+        pretrained_path: Path to the saved pretrained model (a `.pt` file).
+
+    Note:
+        Assumes that the pre-trained model has the exact same config as the
+        current model configs.
+
+    Returns:
+        Updated pytorch model object.
+    """
+    from torch_geometric.graphgym.checkpoint import MODEL_STATE
+
+    logging.info(f"[*] Loading from exact pretrained model: {pretrained_path}")
+    ckpt = torch.load(pretrained_path, map_location=torch.device('cpu'))
+    pretrained_dict = ckpt[MODEL_STATE]
+    model_dict = model.state_dict()
+
+    if not list(pretrained_dict.keys())[0].startswith('model.'):
+        # Update checkpoint dict for models saved with GraphGym PyG prior v2.1
+        for k in list(pretrained_dict.keys()):
+            # print(f'    updating: {k}   ->   model.{k}')
+            pretrained_dict[f'model.{k}'] = pretrained_dict.pop(k)
+
+    # Overwrite entries in the existing state dict.
+    model_dict.update(pretrained_dict)
+    # Load the new state dict.
+    model.load_state_dict(model_dict)
+
+    return model

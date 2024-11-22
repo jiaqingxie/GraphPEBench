@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="3b398ccf-52a6-4cc1-b5b6-0a4b70235be9" name="pegt">
+        <fileTransfer rootFolder="/itet-stor/jiaxie/net_scratch/pe4gt" accessType="SFTP" host="tik42x.ethz.ch" port="22" sshConfigId="05c453d7-2318-405b-ab2a-d339a38269bb" sshConfig="jiaxie@tik42x.ethz.ch:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

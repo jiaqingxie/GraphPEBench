@@ -4,6 +4,7 @@ import gc
 import torch
 from torch_geometric.utils import subgraph
 from tqdm import tqdm
+import torch_geometric.transforms as T
 import torch.multiprocessing as mp
 from functools import partial
 # from multiprocessing import Pool
@@ -11,6 +12,7 @@ from functools import partial
 from torch_geometric.data import Batch
 import torch_geometric as pyg
 import psutil
+from torch_geometric.utils import add_self_loops, remove_self_loops, subgraph
 def get_memory_usage():
     process = psutil.Process()
     mem_info = process.memory_info()
@@ -95,4 +97,21 @@ def clip_graphs_to_size(data, size_limit=5000):
         data.edge_index = edge_index
         if hasattr(data, 'edge_attr'):
             data.edge_attr = edge_attr
+        return data
+
+
+class VirtualNodePatchSingleton(T.VirtualNode):
+    def __call__(self, data):
+        if data.edge_index.numel() == 0:
+            logging.debug(f"Data with empty edge set {data}")
+            data.edge_index, data.edge_attr = add_self_loops(
+                data.edge_index, data.edge_attr, num_nodes=data.num_nodes)
+            data = super().__call__(data)
+            if hasattr(data, "y_graph"):  # potentially fix hybrid head
+                data.y_graph = data.y_graph[:1]
+            data.edge_index, data.edge_attr = remove_self_loops(
+                data.edge_index, data.edge_attr)
+            logging.debug(f"Fixed data due to empty edge set {data}")
+        else:
+            data = super().__call__(data)
         return data

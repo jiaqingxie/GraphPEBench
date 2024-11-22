@@ -2,23 +2,41 @@ import logging
 import os.path as osp
 import time
 import warnings
+import os
+import zipfile
 from functools import partial
 from ..transform.expander_edges import generate_random_expander
-
+from yacs.config import CfgNode as CN
 import psutil
+
+from grit.utils import get_device
+from urllib.parse import urljoin
+from typing import List, Optional
 import gc
+import requests
+from tqdm import tqdm, trange
 import numpy as np
+
 import torch
 import torch_geometric.transforms as T
 from numpy.random import default_rng
+from grit.head.identity import IdentityHead
 from ogb.graphproppred import PygGraphPropPredDataset
 from ogb.nodeproppred import PygNodePropPredDataset
+
+from torch_geometric.loader import DataLoader
 from torch_geometric.datasets import (GNNBenchmarkDataset, Planetoid, TUDataset,
                                       WikipediaNetwork, ZINC)
-from torch_geometric.graphgym.config import cfg
+from torch_geometric.graphgym.config import cfg, set_cfg
+from torch_geometric.graphgym.model_builder import GraphGymModule
 from torch_geometric.graphgym.loader import load_pyg, load_ogb, set_dataset_attr
 from torch_geometric.graphgym.register import register_loader
 
+from grit.transform.transforms import (VirtualNodePatchSingleton,
+                                           clip_graphs_to_size,
+                                           concat_x_and_pos,
+                                           pre_transform_in_memory, typecast_x)
+from grit.encoder.gnn_encoder import gpse_process_batch
 from grit.loader.dataset.aqsol_molecules import AQSOL
 from grit.loader.dataset.coco_superpixels import COCOSuperpixels
 from grit.loader.dataset.malnet_tiny import MalNetTiny
@@ -84,6 +102,104 @@ def log_loaded_dataset(dataset, format, name):
     #         f'     bin {i}: [{start:.2f}, {end:.2f}]: '
     #         f'{hist[i]} ({hist[i] / hist.sum() * 100:.2f}%)'
     #     )
+
+def load_pretrained_gnn(cfg) -> Optional[GraphGymModule]:
+    if cfg.posenc_GPSE.enable:
+        assert cfg.posenc_GPSE.model_dir is not None
+        return load_pretrained_gpse(cfg)
+    else:
+        return None, lambda: None
+
+
+def load_pretrained_gpse(cfg) -> Optional[GraphGymModule]:
+    if cfg.posenc_GPSE.model_dir is None:
+        return None, lambda: None
+
+    logging.info("[*] Setting up GPSE")
+    path = cfg.posenc_GPSE.model_dir
+    logging.info(f"    Loading pre-trained weights from {path}")
+    model_state = torch.load(path, map_location="cpu")["model_state"]
+    # Input dimension of the first module in the model weights
+    cfg.share.pt_dim_in = dim_in = model_state[list(model_state)[0]].shape[1]
+    logging.info(f"    Input dim of the pre-trained model: {dim_in}")
+    # Hidden (representation) dimension and final output dimension
+    if cfg.posenc_GPSE.gnn_cfg.head.startswith("inductive_hybrid"):
+        # Hybrid head dimension inference
+        cfg.share.num_graph_targets = model_state[list(model_state)[-1]].shape[0]
+        node_head_bias_name = [
+            i for i in model_state
+            if i.startswith("model.post_mp.node_post_mp")][-1]
+        if cfg.posenc_GPSE.gnn_cfg.head.endswith("multi"):
+            head_idx = int(
+                node_head_bias_name.split("node_post_mps.")[1].split(".model")[0])
+            dim_out = head_idx + 1
+        else:
+            dim_out = model_state[node_head_bias_name].shape[0]
+        cfg.share.num_node_targets = dim_out
+        logging.info(f"    Graph emb outdim: {cfg.share.num_graph_targets}")
+    elif cfg.posenc_GPSE.gnn_cfg.head == "inductive_node_multi":
+        dim_out = len([
+            1 for i in model_state
+            if ("layer_post_mp" in i) and ("layer.model.weight" in i)
+        ])
+    else:
+        dim_out = model_state[list(model_state)[-2]].shape[0]
+    if cfg.posenc_GPSE.use_repr:
+        cfg.share.pt_dim_out = cfg.posenc_GPSE.gnn_cfg.dim_inner
+    else:
+        cfg.share.pt_dim_out = dim_out
+    logging.info(f"    Outdim of the pre-trained model: {cfg.share.pt_dim_out}")
+
+    # HACK: Temporarily setting global config to default and overwrite GNN
+    # configs using the ones from GPSE. Currently, there is no easy way to
+    # repurpose the GraphGymModule to build a model using a specified cfg other
+    # than completely overwriting the global cfg. [PyG v2.1.0]
+    orig_gnn_cfg = CN(cfg.gnn.copy())
+    orig_dataset_cfg = CN(cfg.dataset.copy())
+    orig_model_cfg = CN(cfg.model.copy())
+    plain_cfg = CN()
+    set_cfg(plain_cfg)
+    # Temporarily replacing the GNN config with the pre-trained GNN predictor
+    cfg.gnn = cfg.posenc_GPSE.gnn_cfg
+    # Resetting dataset config for bypassing the encoder settings
+    cfg.dataset = plain_cfg.dataset
+    # Resetting model config to make sure GraphGymModule uses the default GNN
+    cfg.model = plain_cfg.model
+    logging.info(f"Setting up GPSE using config:\n{cfg.posenc_GPSE.dump()}")
+
+    # Construct model using the patched config and load trained weights
+    model = GraphGymModule(dim_in, dim_out, cfg)
+    model.load_state_dict(model_state)
+    # Set the final linear layer to identity if we want to use the hidden repr
+    if cfg.posenc_GPSE.use_repr:
+        if cfg.posenc_GPSE.repr_type == "one_layer_before":
+            model.model.post_mp.layer_post_mp.model[-1] = torch.nn.Identity()
+        elif cfg.posenc_GPSE.repr_type == "no_post_mp":
+            model.model.post_mp = IdentityHead()
+        else:
+            raise ValueError(f"Unknown repr_type {cfg.posenc_GPSE.repr_type!r}")
+    model.eval()
+    device = get_device(cfg.posenc_GPSE.accelerator, cfg.accelerator)
+    model.to(device)
+    logging.info(f"Pre-trained model constructed:\n{model}")
+
+    # HACK: Construct bounded function to recover the original configurations
+    # to be called right after the pre_transform_in_memory call with
+    # compute_posenc_stats is done. This is necessary because things inside
+    # GrapyGymModule checks for global configs to determine the behavior for
+    # things like forward. To FIX this in the future, need to seriously
+    # make sure modules like this store the fixed value at __init__, instead of
+    # dynamically looking up configs at runtime.
+    def _recover_orig_cfgs():
+        cfg.gnn = orig_gnn_cfg
+        cfg.dataset = orig_dataset_cfg
+        cfg.model = orig_model_cfg
+
+        # Release pretrained model from CUDA memory
+        model.to("cpu")
+        torch.cuda.empty_cache()
+
+    return model, _recover_orig_cfgs
 
 def get_memory_usage():
     process = psutil.Process()
@@ -190,9 +306,14 @@ def load_dataset_master(format, name, dataset_dir):
 
     # Precompute necessary statistics for positional encodings.
     pe_enabled_list = []
+
+
+
+
     for key, pecfg in cfg.items():
         print(pecfg)
-        if key.startswith('posenc_') and pecfg.enable:
+        if (key.startswith(('posenc_', 'graphenc_')) and pecfg.enable
+                and key != "posenc_GPSE"):  # GPSE handled separately
             pe_name = key.split('_', 1)[1]
             pe_enabled_list.append(pe_name)
             if hasattr(pecfg, 'kernel'):
@@ -285,8 +406,172 @@ def load_dataset_master(format, name, dataset_dir):
         # print(f"Indegrees: {cfg.gt.pna_degrees}")
         # print(f"Avg:{np.mean(cfg.gt.pna_degrees)}")
 
+    if cfg.posenc_GPSE.enable:
+        precompute_gpse(cfg, dataset)
     return dataset
 
+
+def gpse_io(
+    dataset,
+    mode: str = "save",
+    name: Optional[str] = None,
+    tag: Optional[str] = None,
+    auto_download: bool = True,
+):
+    assert tag, "Please provide a tag for saving/loading GPSE (e.g., '1.0')"
+    pse_dir = dataset.processed_dir
+    gpse_data_path = osp.join(pse_dir, f"gpse_{tag}_data.pt")
+    gpse_slices_path = osp.join(pse_dir, f"gpse_{tag}_slices.pt")
+
+    def maybe_download_gpse():
+        is_complete = osp.isfile(gpse_data_path) and osp.isfile(gpse_slices_path)
+        if is_complete or not auto_download:
+            return
+
+        if name is None:
+            raise ValueError("Please specify the dataset name for downloading.")
+
+        if tag != "1.0":
+            raise ValueError(f"Invalid tag {tag!r}, currently only support '1.0")
+        # base_url = "https://sandbox.zenodo.org/record/1219850/files/"  # 1.0.dev
+        base_url = "https://zenodo.org/record/8145344/files/"  # 1.0
+        fname = f"{name}_{tag}.zip"
+        url = urljoin(base_url, fname)
+        save_path = osp.join(pse_dir, fname)
+
+        # Stream download
+        with requests.get(url, stream=True) as r:
+            if r.ok:
+                total_size_in_bytes = int(r.headers.get("content-length", 0))
+                pbar = tqdm(
+                    total=total_size_in_bytes,
+                    unit="iB",
+                    unit_scale=True,
+                    desc=f"Downloading {url}",
+                )
+                with open(save_path, "wb") as file:
+                    for data in r.iter_content(1024):
+                        pbar.update(len(data))
+                        file.write(data)
+                pbar.close()
+
+            else:
+                meta_url = base_url.replace("/record/", "/api/records/")
+                meta_url = meta_url.replace("/files/", "")
+                meta_r = requests.get(meta_url)
+                if meta_r.ok:
+                    files = meta_r.json()["files"]
+                    opts = [i["key"].rsplit(".zip")[0] for i in files]
+                else:
+                    opts = []
+
+                opts_str = "\n".join(sorted(opts))
+                raise requests.RequestException(
+                    f"Fail to download from {url} ({r!r}). Available options "
+                    f"for {tag=!r} are:\n{opts_str}",
+                )
+
+        # Unzip files and cleanup
+        logging.info(f"Extracting {save_path}")
+        with zipfile.ZipFile(save_path, "r") as f:
+            f.extractall(pse_dir)
+        os.remove(save_path)
+
+    if mode == "save":
+        torch.save(dataset.data.pestat_GPSE, gpse_data_path)
+        torch.save(dataset.slices["pestat_GPSE"], gpse_slices_path)
+        logging.info(f"Saved pre-computed GPSE ({tag}) to {pse_dir}")
+
+    elif mode == "load":
+        maybe_download_gpse()
+        dataset.data.pestat_GPSE = torch.load(gpse_data_path, map_location="cpu")
+        dataset.slices["pestat_GPSE"] = torch.load(gpse_slices_path, map_location="cpu")
+        logging.info(f"Loaded pre-computed GPSE ({tag}) from {pse_dir}")
+
+    else:
+        raise ValueError(f"Unknown io mode {mode!r}.")
+
+
+@torch.no_grad()
+def precompute_gpse(cfg, dataset):
+    dataset_name = f"{cfg.dataset.format}-{cfg.dataset.name}"
+    tag = cfg.posenc_GPSE.tag
+    if cfg.posenc_GPSE.from_saved:
+        gpse_io(dataset, "load", name=dataset_name, tag=tag)
+        cfg.share.pt_dim_out = dataset.data.pestat_GPSE.shape[1]
+        return
+
+    # Load GPSE model and prepare bounded method to recover original configs
+    gpse_model, _recover_orig_cfgs = load_pretrained_gpse(cfg)
+
+    # Temporarily replace the transformation
+    orig_dataset_transform = dataset.transform
+    dataset.transform = None
+    if cfg.posenc_GPSE.virtual_node:
+        dataset.transform = VirtualNodePatchSingleton()
+
+    # Remove split indices, to be recovered at the end of the precomputation
+    tmp_store = {}
+    for name in ["train_mask", "val_mask", "test_mask", "train_graph_index",
+                 "val_graph_index", "test_graph_index", "train_edge_index",
+                 "val_edge_index", "test_edge_index"]:
+        if (name in dataset.data) and (dataset.slices is None
+                                       or name in dataset.slices):
+            tmp_store_data = dataset.data.pop(name)
+            tmp_store_slices = dataset.slices.pop(name) if dataset.slices else None
+            tmp_store[name] = (tmp_store_data, tmp_store_slices)
+
+    loader = DataLoader(dataset, batch_size=cfg.posenc_GPSE.loader.batch_size,
+                        shuffle=False, num_workers=cfg.num_workers,
+                        pin_memory=True, persistent_workers=cfg.num_workers > 0)
+
+    # Batched GPSE precomputation loop
+    data_list = []
+    curr_idx = 0
+    pbar = trange(len(dataset), desc="Pre-computing GPSE")
+    tic = time.perf_counter()
+    for batch in loader:
+        batch_out, batch_ptr = gpse_process_batch(gpse_model, batch)
+
+        batch_out = batch_out.to("cpu", non_blocking=True)
+        # Need to wait for batch_ptr to finish transfering so that start and
+        # end indices are ready to use
+        batch_ptr = batch_ptr.to("cpu", non_blocking=False)
+
+        for start, end in zip(batch_ptr[:-1], batch_ptr[1:]):
+            data = dataset.get(curr_idx)
+            if cfg.posenc_GPSE.virtual_node:
+                end = end - 1
+            data.pestat_GPSE = batch_out[start:end]
+            data_list.append(data)
+            curr_idx += 1
+
+        pbar.update(len(batch_ptr) - 1)
+    pbar.close()
+
+    # Collate dataset and reset indicies and data list
+    dataset.transform = orig_dataset_transform
+    dataset._indices = None
+    dataset._data_list = data_list
+    dataset.data, dataset.slices = dataset.collate(data_list)
+
+    # Recover split indices
+    for name, (tmp_store_data, tmp_store_slices) in tmp_store.items():
+        dataset.data[name] = tmp_store_data
+        if tmp_store_slices is not None:
+            dataset.slices[name] = tmp_store_slices
+    dataset._data_list = None
+
+    if cfg.posenc_GPSE.save:
+        gpse_io(dataset, "save", tag=tag)
+
+    timestr = time.strftime("%H:%M:%S", time.gmtime(time.perf_counter() - tic))
+    logging.info(f"Finished GPSE pre-computation, took {timestr}")
+
+    # Release resource and recover original configs
+    del gpse_model
+    torch.cuda.empty_cache()
+    _recover_orig_cfgs()
 
 def add_pe_transform_to_dataset(format, name, dataset_dir, pe_transform=None):
     if format.startswith('PyG-'):
@@ -816,3 +1101,8 @@ def join_dataset_splits(datasets):
     datasets[0].split_idxs = split_idxs
 
     return datasets[0]
+
+def set_virtual_node(dataset):
+    if dataset.transform_list is None:
+        dataset.transform_list = []
+    dataset.transform_list.append(VirtualNodePatchSingleton())
