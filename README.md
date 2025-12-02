@@ -1,4 +1,4 @@
-# Benchmarking positional encodings for gnns and graph transformers (SIGKDD)
+# Benchmarking positional encodings for gnns and graph transformers (KDD'26)
 Florian Grötschla, Jiaqing Xie and Roger Wattenhofer
 This repo is the extension of GRIT to evaluate PE on GTs.
 
@@ -80,4 +80,17 @@ python main.py --cfg configs/GT/0_bench/GRIT/zinc/zinc-GRIT-RWDIFF.yaml  wandb.u
 - Configurations are available under `PEGT/configs/GT/0_bench/xx/dataset/dataset-xx-yy.yaml` where
 dataset is the name of the dataset, xx is the attention module and yy is your positional encoding
 - Scripts to execute are available under `./scripts/xxx.sh`
-  - will run 4 trials of experiments parallelly on `GPU:0,1,2,3`. 
+  - will run 4 trials of experiments parallelly on `GPU:0,1,2,3`.
+
+## Citation
+
+If you find this work useful, please cite:
+
+```bibtex
+@inproceedings{grotschla2025benchmarking,
+  title={Benchmarking Positional Encodings for {GNN}s and Graph Transformers},
+  author={Florian Gr{\"o}tschla and Jiaqing Xie and Roger Wattenhofer},
+  booktitle={32nd SIGKDD Conference on Knowledge Discovery and Data Mining - Datasets and Benchmarks Track},
+  year={2025},
+  url={https://openreview.net/forum?id=4h3vDT7e0s}
+}
