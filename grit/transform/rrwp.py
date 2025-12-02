@@ -20,8 +20,10 @@ from torch_sparse import SparseTensor
 
 
 def add_node_attr(data: Data, value: Any,
-                  attr_name: Optional[str] = None) -> Data:
+                  attr_name: Optional[str]) -> Data:
+    print('x' in data)
     if attr_name is None:
+
         if 'x' in data:
             x = data.x.view(-1, 1) if data.x.dim() == 1 else data.x
             data.x = torch.cat([x, value.to(x.device, x.dtype)], dim=-1)
@@ -29,7 +31,9 @@ def add_node_attr(data: Data, value: Any,
             data.x = value
     else:
         data[attr_name] = value
-
+        if attr_name == "rrwp":
+            x = data.x.view(-1, 1) if data.x.dim() == 1 else data.x
+            data.x = torch.cat([x, value.to(x.device, x.dtype)], dim=-1)
     return data
 
 

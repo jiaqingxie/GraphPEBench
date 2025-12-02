@@ -92,7 +92,7 @@ class VOCSuperpixels(InMemoryDataset):
         assert slic_compactness in [10, 30]
         super().__init__(root, transform, pre_transform, pre_filter)
         path = osp.join(self.processed_dir, f'{split}.pt')
-        self.data, self.slices = torch.load(path)
+        self.data, self.slices = torch.load(path, weights_only=False)
         
     
     @property
@@ -118,7 +118,13 @@ class VOCSuperpixels(InMemoryDataset):
         return ['train.pt', 'val.pt', 'test.pt']
 
     def download(self):
-        shutil.rmtree(self.raw_dir)
+        # Check if raw files already exist
+        if all(osp.exists(osp.join(self.raw_dir, f)) for f in self.raw_file_names):
+            print(f"Raw files already exist in {self.raw_dir}, skipping download.")
+            return
+        
+        if osp.exists(self.raw_dir):
+            shutil.rmtree(self.raw_dir)
         path = download_url(self.url[self.slic_compactness][self.name], self.root)
         extract_zip(path, self.root)
         os.rename(osp.join(self.root, 'voc_superpixels_' + self.name), self.raw_dir)

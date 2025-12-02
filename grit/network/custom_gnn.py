@@ -6,7 +6,10 @@ from torch_geometric.graphgym.models.gnn import FeatureEncoder, GNNPreMP
 from torch_geometric.graphgym.register import register_network
 from grit.layer.gatedgcn_layer import ResGatedGCNConvLayer
 from grit.layer.gatedgcn_layer import GatedGCNLayer
+from grit.layer.gatedgcn_layer import MLPGraphGymLayer
 from grit.layer.gine_conv_layer import GINEConvLayer
+from grit.layer.gin_layer import GINConvLayer
+
 
 
 @register_network('custom_gnn')
@@ -31,11 +34,15 @@ class CustomGNN(torch.nn.Module):
 
         conv_model = self.build_conv_model(cfg.gnn.layer_type)
         layers = []
-        for _ in range(cfg.gnn.layers_mp):
-            layers.append(conv_model(dim_in,
-                                     dim_in,
-                                     dropout=cfg.gnn.dropout,
-                                     residual=cfg.gnn.residual))
+
+        if cfg.gnn.layer_type != "mlpconv":
+            for _ in range(cfg.gnn.layers_mp):
+                layers.append(conv_model(dim_in,
+                                         dim_in,
+                                         dropout=cfg.gnn.dropout,
+                                         residual=cfg.gnn.residual))
+        else:
+            layers.append(conv_model(dim_in, dim_in))
         self.gnn_layers = torch.nn.Sequential(*layers)
 
         GNNHead = register.head_dict[cfg.gnn.head]
@@ -46,8 +53,12 @@ class CustomGNN(torch.nn.Module):
             return GatedGCNLayer
         elif model_type == 'gineconv':
             return GINEConvLayer
-        elif model_type == 'gatedgcnconv_noef':
+        elif model_type == 'resgatedgcnconv':
             return ResGatedGCNConvLayer
+        elif model_type == 'gin_conv':
+            return GINConvLayer
+        elif model_type == 'mlpconv':
+            return MLPGraphGymLayer
         else:
             raise ValueError("Model {} unavailable".format(model_type))
 

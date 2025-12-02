@@ -28,9 +28,9 @@ dataset:
   edge_encoder_bn: False
 posenc_RRWP:
   enable: True
-  ksteps: 16
+  ksteps: 8
   add_identity: True
-  add_node_attr: False
+  add_node_attr: True
   add_inverse: False
 train:
   mode: custom

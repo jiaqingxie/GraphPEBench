@@ -1,0 +1,73 @@
+out_dir: results
+metric_best: accuracy
+tensorboard_each_run: True
+accelerator: "cuda:0"
+repeat: 4
+num_workers: 4
+mlflow:
+  use: False
+  project: Exp
+  name: OGBN-MAG-GINE-LapPE
+wandb:
+  use: True
+  project: "PEGT"
+  name: "OGBN-MAG-GINE-LapPE"
+  entity: jiaqing
+dataset:
+  pe_transform_on_the_fly: False
+  format: OGB
+  name: ogbn-mag
+  task: node
+  task_type: classification
+  transductive: False
+  node_encoder: True
+  node_encoder_name: LinearNode+LapPE
+  node_encoder_bn: False
+  edge_encoder: True
+  edge_encoder_name: DummyEdge
+  edge_encoder_bn: False
+posenc_LapPE:
+  enable: True
+  eigen:
+    laplacian_norm: sym
+    eigvec_norm: L2
+    max_freqs: 4  # Sparse solver - efficient!
+  model: DeepSet
+  dim_pe: 16
+  layers: 2
+  n_heads: 4
+  post_layers: 0
+  raw_norm_type: none
+  pass_as_var: True
+train:
+  mode: custom
+  batch_size: 1
+  eval_period: 1
+  ckpt_period: 100
+model:
+  type: custom_gnn
+  loss_fun: cross_entropy
+  edge_decoding: dot
+  graph_pooling: add
+gnn:
+  head: inductive_node
+  layers_pre_mp: 0
+  layers_mp: 4
+  layers_post_mp: 1
+  dim_inner: 128
+  layer_type: gineconv
+  batchnorm: True
+  act: relu
+  dropout: 0.1
+  residual: True
+  agg: add
+  normalize_adj: False
+optim:
+  clip_grad_norm: True
+  optimizer: adamW
+  weight_decay: 1e-3
+  base_lr: 0.001
+  max_epoch: 300
+  scheduler: cosine_with_warmup
+  num_warmup_epochs: 5
+

@@ -88,7 +88,7 @@ class COCOSuperpixels(InMemoryDataset):
         assert slic_compactness in [10, 30]
         super().__init__(root, transform, pre_transform, pre_filter)
         path = osp.join(self.processed_dir, f'{split}.pt')
-        self.data, self.slices = torch.load(path)
+        self.data, self.slices = torch.load(path, weights_only=False)
         
     
     @property
@@ -97,23 +97,36 @@ class COCOSuperpixels(InMemoryDataset):
 
     @property
     def raw_dir(self):
-        return osp.join(self.root,
-                        'slic_compactness_' + str(self.slic_compactness),
-                        self.name,
-                        'raw')
+        # If root already contains the dataset name, use it directly
+        if self.name in osp.basename(self.root):
+            return osp.join(self.root, 'raw')
+        else:
+            return osp.join(self.root,
+                            'slic_compactness_' + str(self.slic_compactness),
+                            self.name,
+                            'raw')
     
     @property
     def processed_dir(self):
-        return osp.join(self.root,
-                        'slic_compactness_' + str(self.slic_compactness),
-                        self.name,
-                        'processed')
+        # If root already contains the dataset name, use it directly
+        if self.name in osp.basename(self.root):
+            return osp.join(self.root, 'processed')
+        else:
+            return osp.join(self.root,
+                            'slic_compactness_' + str(self.slic_compactness),
+                            self.name,
+                            'processed')
     
     @property
     def processed_file_names(self):
         return ['train.pt', 'val.pt', 'test.pt']
 
     def download(self):
+        # Check if raw files already exist
+        if all(osp.exists(osp.join(self.raw_dir, f)) for f in self.raw_file_names):
+            print(f"Raw files already exist in {self.raw_dir}, skipping download.")
+            return
+            
         shutil.rmtree(self.raw_dir)
         path = download_url(self.url[self.slic_compactness][self.name], self.root)
         extract_zip(path, self.root)

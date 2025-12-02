@@ -1,6 +1,14 @@
 import torch
 import torch.nn as nn
-from attrdict import AttrDict
+try:
+    from attrdict import AttrDict
+except ImportError:
+    # Python 3.12+ compatibility: attrdict is not compatible
+    # Use a simple dict wrapper instead
+    class AttrDict(dict):
+        def __init__(self, *args, **kwargs):
+            super(AttrDict, self).__init__(*args, **kwargs)
+            self.__dict__ = self
 import torch_geometric
 import json
 import torch_geometric.graphgym.register as register

@@ -167,6 +167,26 @@ class ResGatedGCNConvGraphGymLayer(nn.Module):
         batch.x = self.model(batch.x, batch.edge_index)
         return batch
 
+
+@register_layer('mlpconv')
+class MLPGraphGymLayer(nn.Module):
+    """Two-layer MLP for GraphGym."""
+    def __init__(self, dim_in, dim_out):
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.Linear(dim_in, dim_out),
+            nn.GELU(),
+            nn.Dropout(0.05),
+            nn.Linear(dim_out, dim_out),
+            nn.GELU(),
+            nn.Dropout(0.05),
+        )
+
+    def forward(self, batch):
+        batch.x = self.model(batch.x)
+        return batch
+
+
 class ResGatedGCNConvLayer(nn.Module):
     """ResGatedGCN layer"""
 
@@ -174,11 +194,10 @@ class ResGatedGCNConvLayer(nn.Module):
         super().__init__()
         self.model = ResGatedGraphConv(in_dim,
                                        out_dim,
-                                       dropout=dropout,
                                        act=register.act_dict[act](),
-                                       residual=residual,
                                        **kwargs)
 
     def forward(self, batch):
         batch.x = self.model(batch.x, batch.edge_index)
         return batch
+

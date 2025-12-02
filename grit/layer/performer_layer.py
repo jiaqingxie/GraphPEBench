@@ -39,7 +39,13 @@ from local_attention import LocalAttention
 from axial_positional_embedding import AxialPositionalEmbedding
 from performer_pytorch.reversible import ReversibleSequence, SequentialSequence
 
-from distutils.version import LooseVersion
+try:
+    from distutils.version import LooseVersion
+except ImportError:
+    # Python 3.12+ compatibility: distutils was removed
+    from packaging import version
+    def LooseVersion(v):
+        return version.parse(v)
 
 TORCH_GE_1_8_0 = LooseVersion(torch.__version__) >= LooseVersion('1.8.0')
 

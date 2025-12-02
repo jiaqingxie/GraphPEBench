@@ -56,7 +56,7 @@ gnn: # decoder --> san_graph = MLP + pooling
   batchnorm: True
   layer_type: gatedgcnconv
   act: relu
-  dropout: 0.0
+  dropout: 0.5
   agg: mean
   normalize_adj: False
 optim:

@@ -160,7 +160,7 @@ if __name__ == '__main__':
         # Set machine learning pipeline
         loaders = create_loader()
         loggers = create_logger()
-        if cfg.dataset.name == 'ogbn-arxiv' or cfg.dataset.name == 'ogbn-proteins':
+        if cfg.dataset.name in ['ogbn-arxiv', 'ogbn-proteins', 'ogbn-mag', 'ogbn-papers100M', 'ogbn-products']:
             loggers_2 = create_logger()
             loggers_3 = create_logger()
             loggers_2[0].name = "val"

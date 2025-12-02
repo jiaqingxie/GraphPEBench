@@ -1,7 +1,7 @@
 from copy import deepcopy
 import logging
 import math
-from scipy.sparse.linalg import expm
+from scipy.sparse.linalg import expm, eigsh
 import scipy.sparse as sp
 
 import numpy as np
@@ -24,7 +24,15 @@ from torch_geometric.utils import to_undirected, remove_self_loops, add_self_loo
 
 from ..utils import wl_positional_encoding, adj_mul
 import torch_geometric.utils as utils
-from attrdict import AttrDict
+try:
+    from attrdict import AttrDict
+except ImportError:
+    # Python 3.12+ compatibility: attrdict is not compatible
+    # Use a simple dict wrapper instead
+    class AttrDict(dict):
+        def __init__(self, *args, **kwargs):
+            super(AttrDict, self).__init__(*args, **kwargs)
+            self.__dict__ = self
 import torch_geometric
 import json
 from ..encoder.neuraldrawer.network.preprocessing import preprocess_dataset
@@ -127,7 +135,6 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
             *get_laplacian(undir_edge_index, normalization=laplacian_norm_type,
                            num_nodes=N)
         )
-        evals, evects = np.linalg.eigh(L.toarray())
         
         if 'LapPE' in pe_types:
             max_freqs=cfg.posenc_LapPE.eigen.max_freqs
@@ -135,6 +142,24 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
         elif 'EquivStableLapPE' in pe_types:  
             max_freqs=cfg.posenc_EquivStableLapPE.eigen.max_freqs
             eigvec_norm=cfg.posenc_EquivStableLapPE.eigen.eigvec_norm
+        
+        # Use sparse eigenvalue solver for large graphs
+        # Only compute the smallest max_freqs eigenvalues instead of all
+        k = min(max_freqs, N - 2)  # Can't compute more than N-2 eigenvalues with eigsh
+        if N > 5000:  # Use sparse solver for large graphs
+            try:
+                logging.info(f"Computing LapPE for large graph with N={N:,} nodes, computing {k} eigenvalues...")
+                logging.info(f"This may take several minutes for very large graphs. Please be patient...")
+                import time
+                start_time = time.time()
+                evals, evects = eigsh(L, k=k, which='SM', return_eigenvectors=True)
+                elapsed = time.time() - start_time
+                logging.info(f"Eigenvalue computation completed in {elapsed:.2f} seconds")
+            except Exception as e:
+                logging.warning(f"Sparse eigsh failed: {e}. Falling back to dense solver for small subgraph.")
+                evals, evects = np.linalg.eigh(L.toarray())
+        else:
+            evals, evects = np.linalg.eigh(L.toarray())
         
         data.EigVals, data.EigVecs = get_lap_decomp_stats(
             evals=evals, evects=evects,
@@ -149,19 +174,46 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
                            num_nodes=N)
         )
 
+        max_freqs = cfg.posenc_GCKN.eigen.max_freqs
+        eigvec_norm = cfg.posenc_GCKN.eigen.eigvec_norm
+        k = min(max_freqs, N - 2)
+
         if cfg.posenc_GCKN.method == "diffusion":
+            logging.info(f"Computing diffusion kernel for GCKN (beta={cfg.posenc_GCKN.beta})...")
             L = expm(-cfg.posenc_GCKN.beta * L)
-            evals, evects = np.linalg.eigh(L.toarray())
+            # Use sparse solver for large graphs
+            if N > 5000:
+                try:
+                    logging.info(f"Computing GCKN eigenvalues for graph with N={N:,} nodes, k={k}...")
+                    import time
+                    start_time = time.time()
+                    evals, evects = eigsh(L, k=k, which='LM', return_eigenvectors=True)
+                    elapsed = time.time() - start_time
+                    logging.info(f"GCKN eigenvalue computation completed in {elapsed:.2f} seconds")
+                except Exception as e:
+                    logging.warning(f"Sparse eigsh failed for GCKN: {e}. Falling back to dense solver.")
+                    evals, evects = np.linalg.eigh(L.toarray())
+            else:
+                evals, evects = np.linalg.eigh(L.toarray())
         elif cfg.posenc_GCKN.method == "pRWSE":
             L = sp.identity(L.shape[0], dtype=L.dtype) - cfg.posenc_GCKN.beta * L
             tmp = L
             for _ in range(cfg.posenc_GCKN.p - 1):
                 tmp = tmp.dot(L)
-            evals, evects = np.linalg.eigh(tmp.toarray())
-
-
-        max_freqs = cfg.posenc_GCKN.eigen.max_freqs
-        eigvec_norm = cfg.posenc_GCKN.eigen.eigvec_norm
+            # Use sparse solver for large graphs
+            if N > 5000:
+                try:
+                    logging.info(f"Computing GCKN pRWSE eigenvalues for graph with N={N:,} nodes, k={k}...")
+                    import time
+                    start_time = time.time()
+                    evals, evects = eigsh(tmp, k=k, which='LM', return_eigenvectors=True)
+                    elapsed = time.time() - start_time
+                    logging.info(f"GCKN eigenvalue computation completed in {elapsed:.2f} seconds")
+                except Exception as e:
+                    logging.warning(f"Sparse eigsh failed for GCKN: {e}. Falling back to dense solver.")
+                    evals, evects = np.linalg.eigh(tmp.toarray())
+            else:
+                evals, evects = np.linalg.eigh(tmp.toarray())
 
         data.EigVals, data.EigVecs = get_lap_decomp_stats(
             evals=evals, evects=evects,
@@ -241,10 +293,28 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
             *get_laplacian(undir_edge_index, normalization=norm_type,
                            num_nodes=N)
         )
-        evals_sn, evects_sn = np.linalg.eigh(L.toarray())
+        
+        max_freqs_sn = cfg.posenc_SignNet.eigen.max_freqs
+        k_sn = min(max_freqs_sn, N - 2)
+        
+        # Use sparse solver for large graphs
+        if N > 5000:
+            try:
+                logging.info(f"Computing SignNet eigenvalues for large graph with N={N:,} nodes, k={k_sn}...")
+                import time
+                start_time = time.time()
+                evals_sn, evects_sn = eigsh(L, k=k_sn, which='SM', return_eigenvectors=True)
+                elapsed = time.time() - start_time
+                logging.info(f"SignNet eigenvalue computation completed in {elapsed:.2f} seconds")
+            except Exception as e:
+                logging.warning(f"Sparse eigsh failed for SignNet: {e}. Falling back to dense solver.")
+                evals_sn, evects_sn = np.linalg.eigh(L.toarray())
+        else:
+            evals_sn, evects_sn = np.linalg.eigh(L.toarray())
+        
         data.eigvals_sn, data.eigvecs_sn = get_lap_decomp_stats(
             evals=evals_sn, evects=evects_sn,
-            max_freqs=cfg.posenc_SignNet.eigen.max_freqs,
+            max_freqs=max_freqs_sn,
             eigvec_norm=cfg.posenc_SignNet.eigen.eigvec_norm)
 
     # Random Walks.
@@ -265,11 +335,36 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
             L_heat = to_scipy_sparse_matrix(
                 *get_laplacian(undir_edge_index, normalizationv=None, num_nodes=N)
             )
-            evals_heat, evects_heat = np.linalg.eigh(L_heat.toarray())
+            
+            # Determine how many eigenvalues we need for heat kernel
+            if 'HKdiagSE' in pe_types:
+                max_freqs_hk = len(cfg.posenc_HKdiagSE.kernel.times) * 2  # Rough estimate
+            else:
+                max_freqs_hk = 50  # Default for HKfullPE
+            k_hk = min(max_freqs_hk, N - 2)
+            
+            # Use sparse solver for large graphs
+            if N > 5000:
+                try:
+                    logging.info(f"Computing Heat Kernel eigenvalues for large graph with N={N:,} nodes, k={k_hk}...")
+                    import time
+                    start_time = time.time()
+                    evals_heat, evects_heat = eigsh(L_heat, k=k_hk, which='SM', return_eigenvectors=True)
+                    elapsed = time.time() - start_time
+                    logging.info(f"Heat Kernel eigenvalue computation completed in {elapsed:.2f} seconds")
+                except Exception as e:
+                    logging.warning(f"Sparse eigsh failed for Heat Kernel: {e}. Falling back to dense solver.")
+                    evals_heat, evects_heat = np.linalg.eigh(L_heat.toarray())
+            else:
+                evals_heat, evects_heat = np.linalg.eigh(L_heat.toarray())
         else:
             evals_heat, evects_heat = evals, evects
-        evals_heat = torch.from_numpy(evals_heat)
-        evects_heat = torch.from_numpy(evects_heat)
+        
+        # Convert to torch tensors if they're numpy arrays
+        if not isinstance(evals_heat, torch.Tensor):
+            evals_heat = torch.from_numpy(evals_heat)
+        if not isinstance(evects_heat, torch.Tensor):
+            evects_heat = torch.from_numpy(evects_heat)
 
         # Get the full heat kernels.
         if 'HKfullPE' in pe_types:
@@ -306,6 +401,7 @@ def compute_posenc_stats(data, pe_types, is_undirected, cfg):
                             spd=param.spd, # by default False
                             )
         data = transform(data)
+        print(data)
 
     if 'GD' in pe_types:
         pecfg = cfg.posenc_GD
@@ -394,24 +490,35 @@ def get_lap_decomp_stats(evals, evects, max_freqs, eigvec_norm='L2'):
         Tensor (num_nodes, max_freqs, 1) eigenvalues repeated for each node
         Tensor (num_nodes, max_freqs) of eigenvector values per node
     """
-    N = len(evals)  # Number of nodes, including disconnected nodes.
+    # Get number of nodes from eigenvectors (works for both dense and sparse solvers)
+    N = evects.shape[0]  # Number of nodes, including disconnected nodes.
+    num_eigs = len(evals)  # Number of eigenvalues computed
 
     # Keep up to the maximum desired number of frequencies.
-    idx = evals.argsort()[:max_freqs]
+    # If using sparse solver, evals/evects are already the smallest ones
+    if num_eigs <= max_freqs:
+        # Sparse solver case: already have the right eigenvalues
+        idx = evals.argsort()[:num_eigs]
+    else:
+        # Dense solver case: need to select the smallest max_freqs
+        idx = evals.argsort()[:max_freqs]
+    
     evals, evects = evals[idx], np.real(evects[:, idx])
     evals = torch.from_numpy(np.real(evals)).clamp_min(0)
 
     # Normalize and pad eigen vectors.
     evects = torch.from_numpy(evects).float()
     evects = eigvec_normalizer(evects, evals, normalization=eigvec_norm)
-    if N < max_freqs:
-        EigVecs = F.pad(evects, (0, max_freqs - N), value=float('nan'))
+    
+    # Pad eigenvectors if we computed fewer than max_freqs
+    if num_eigs < max_freqs:
+        EigVecs = F.pad(evects, (0, max_freqs - num_eigs), value=float('nan'))
     else:
         EigVecs = evects
 
-    # Pad and save eigenvalues.
-    if N < max_freqs:
-        EigVals = F.pad(evals, (0, max_freqs - N), value=float('nan')).unsqueeze(0)
+    # Pad and save eigenvalues, then repeat for each node
+    if num_eigs < max_freqs:
+        EigVals = F.pad(evals, (0, max_freqs - num_eigs), value=float('nan')).unsqueeze(0)
     else:
         EigVals = evals.unsqueeze(0)
     EigVals = EigVals.repeat(N, 1).unsqueeze(2)
@@ -478,23 +585,76 @@ def get_rw_landing_probs(ksteps, edge_index, edge_weight=None,
 
     if edge_index.numel() == 0:
         P = edge_index.new_zeros((1, num_nodes, num_nodes))
+        use_sparse = False
     else:
-        # P = D^-1 * A
-        P = torch.diag(deg_inv) @ to_dense_adj(edge_index, max_num_nodes=num_nodes)  # 1 x (Num nodes) x (Num nodes)
-    rws = []
-    if ksteps == list(range(min(ksteps), max(ksteps) + 1)):
-        # Efficient way if ksteps are a consecutive sequence (most of the time the case)
-        Pk = P.clone().detach().matrix_power(min(ksteps))
-        for k in range(min(ksteps), max(ksteps) + 1):
-            rws.append(torch.diagonal(Pk, dim1=-2, dim2=-1) * \
-                       (k ** (space_dim / 2)))
-            Pk = Pk @ P
-    else:
-        # Explicitly raising P to power k for each k \in ksteps.
-        for k in ksteps:
-            rws.append(torch.diagonal(P.matrix_power(k), dim1=-2, dim2=-1) * \
-                       (k ** (space_dim / 2)))
-    rw_landing = torch.cat(rws, dim=0).transpose(0, 1)  # (Num nodes) x (K steps)
+        # For large graphs, use sparse matrix operations
+        use_sparse = num_nodes > 5000
+        
+        if use_sparse:
+            # Use sparse matrix representation for large graphs
+            logging.info(f"Computing RWSE for large graph with N={num_nodes:,} nodes using sparse operations...")
+            import scipy.sparse as sp_scipy
+            
+            # Convert to scipy sparse matrix for efficient computation
+            edge_index_np = edge_index.cpu().numpy()
+            edge_weight_np = edge_weight.cpu().numpy()
+            
+            # Create sparse adjacency matrix
+            A_sp = sp_scipy.csr_matrix(
+                (edge_weight_np, (edge_index_np[0], edge_index_np[1])),
+                shape=(num_nodes, num_nodes)
+            )
+            
+            # Create D^-1 as sparse diagonal matrix
+            deg_inv_np = deg_inv.cpu().numpy()
+            Dinv_sp = sp_scipy.diags(deg_inv_np, format='csr')
+            
+            # P = D^-1 * A (sparse matrix multiplication)
+            P_sp = Dinv_sp @ A_sp
+            
+            # Compute random walk landing probabilities using sparse matrices
+            rws = []
+            if ksteps == list(range(min(ksteps), max(ksteps) + 1)):
+                # Efficient consecutive sequence
+                Pk_sp = P_sp
+                for _ in range(min(ksteps) - 1):
+                    Pk_sp = Pk_sp @ P_sp
+                
+                for k in range(min(ksteps), max(ksteps) + 1):
+                    # Extract diagonal efficiently from sparse matrix
+                    diag = torch.from_numpy(Pk_sp.diagonal()).float()
+                    rws.append(diag * (k ** (space_dim / 2)))
+                    Pk_sp = Pk_sp @ P_sp
+            else:
+                # Non-consecutive sequence
+                for k in ksteps:
+                    Pk_sp = P_sp
+                    for _ in range(k - 1):
+                        Pk_sp = Pk_sp @ P_sp
+                    diag = torch.from_numpy(Pk_sp.diagonal()).float()
+                    rws.append(diag * (k ** (space_dim / 2)))
+            
+            rw_landing = torch.stack(rws, dim=1)  # (Num nodes) x (K steps)
+            return rw_landing
+        else:
+            # Original dense implementation for small graphs
+            P = torch.diag(deg_inv) @ to_dense_adj(edge_index, max_num_nodes=num_nodes)  # 1 x (Num nodes) x (Num nodes)
+    
+    if not use_sparse:
+        rws = []
+        if ksteps == list(range(min(ksteps), max(ksteps) + 1)):
+            # Efficient way if ksteps are a consecutive sequence (most of the time the case)
+            Pk = P.clone().detach().matrix_power(min(ksteps))
+            for k in range(min(ksteps), max(ksteps) + 1):
+                rws.append(torch.diagonal(Pk, dim1=-2, dim2=-1) * \
+                           (k ** (space_dim / 2)))
+                Pk = Pk @ P
+        else:
+            # Explicitly raising P to power k for each k \in ksteps.
+            for k in ksteps:
+                rws.append(torch.diagonal(P.matrix_power(k), dim1=-2, dim2=-1) * \
+                           (k ** (space_dim / 2)))
+        rw_landing = torch.cat(rws, dim=0).transpose(0, 1)  # (Num nodes) x (K steps)
 
     return rw_landing
 
