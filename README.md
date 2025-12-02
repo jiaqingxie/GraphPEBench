@@ -1,4 +1,5 @@
-# PEGT: Evaluating Positional Encodings for Graph Transformers
+# Benchmarking positional encodings for gnns and graph transformers (SIGKDD)
+Florian Grötschla, Jiaqing Xie and Roger Wattenhofer
 This repo is the extension of GRIT to evaluate PE on GTs.
 
 
