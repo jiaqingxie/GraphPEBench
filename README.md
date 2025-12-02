@@ -1,6 +1,6 @@
 # Benchmarking positional encodings for gnns and graph transformers (KDD'26)
 Florian Grötschla, Jiaqing Xie and Roger Wattenhofer
-This repo is the extension of GRIT to evaluate PE on GTs.
+
 
 
 > The implementation is based on [GRIT (Ma et al., ICML 2023)](https://jiaqingxie.github.io/paper/GRIT.pdf).
